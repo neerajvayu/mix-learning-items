@@ -1,0 +1,8 @@
+1. Use Google, Bing, or other preferred search engine to locate trusted NTP time servers. These are typically provided by government or other network organizations.
+2. Log onto the domain controller with administrative credentials and launch a command prompt
+3. Stop the time service with the following command: net stop w32time
+4. Enter the following command to configure the NTP time servers: w32tm /config /syncfromflags:manual /manualpeerlist:”time server 1, time server 2, time server 3” then hit enter. The command should complete successfully.
+5. Inform the domain controller that these are trusted server with the following command: w32tm /config /reliable:yes
+6. Restart the time service: net start w32time
+7. Review the results by entering: w32tm /query /configuration
+8. Ensure the settings are the desired ones. Then close the command prompt. The NTP servers have now been configured.
