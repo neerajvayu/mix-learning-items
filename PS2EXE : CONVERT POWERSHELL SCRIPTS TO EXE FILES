@@ -1,0 +1,22 @@
+https://gallery.technet.microsoft.com/PS2EXE-Convert-PowerShell-9e4e07f1/file/134627/1/PS2EXE-v0.5.0.0.zip
+
+Original description of version 0.1 with updates - especially in the "Usage" section
+In the last days I created the tool “PS2EXE”. It is able to “convert” PowerShell scripts to “standalone” EXE files.
+But: It does not convert the PowerShell script to an other language! It encapsulates the script with a lightweight PowerShell host written in C# and compiles the dynamically generated C# source code in memory to an EXE file. The resulting EXE is an .NET assembly that contains the source script encoded in Base64. The EXE includes all stuff that is needed to execute an PowerShell through the .NET object model. It is based on classes in the namespace System.Management.Automation that reperents the PowerShell engine. – Therefore the EXE file is not a real “standalone” EXE file. It needs PowerShell to be installed!!! And – of course – it needs .NET Framework v2.0. Furthermore “script execution” have to be allowed (see cmdlet: set-execultionpolicy). – The resulting EXE is “MSIL” and is able to execute as x64 or x86.
+The tool “PS2EXE” itself is a PowerShell script! – It does the in-memory compilation and generates the EXE file. It uses the CSharpCodeProvider class of namespace Microsoft.CSharp.
+The script is really simple. I contains a multiline string that represents the PowerShell host I’ve written. This is much more interesting than the PS2EXE.ps1 script itself. – Have a look into it!
+
+Usage:
+Call  the script with this parameters:
+-inputFile	PowerShell script file
+-outputFile	file name (with path) for the destination EXE file
+-debug	(switch) generate debug info in the destination EXE file. The dynamically generated .CS file will stored beside the output EXE file. Furthermore a .PDB file will be generated for the EXE file
+-verbose	(switch) shows also verbose informations – if any.
+-x86	(switch) compile EXE to run as 32 bit application
+-x64	(switch) compile EXE to run as 64 bit application
+-runtime20	(switch) force running the EXE in PowerShell 2.0 using .NET 2.0
+-runtime30	(switch) force running the EXE in PowerShell 3.0 using .NET 4.0
+-lcid	specify language ID for threads
+-sta	run PowerShell environment in Single Thread Apartment mode
+-mta	run PowerShell environment in Multithread Apartment mode
+-noconsole	compile PS script as Windows application
