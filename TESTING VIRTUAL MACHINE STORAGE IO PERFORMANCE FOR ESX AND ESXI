@@ -1,0 +1,43 @@
+Symptoms
+You see slow performance with a virtual machine on a SAN
+Slow virtual machine performance
+Completing a task takes a significant amount of time
+Purpose
+This article provides steps to test the speed/throughput on ESX/ESXi and virtual machines as well as steps to narrow down the issue.
+Resolution
+Doing speeds tests are always relative to the environment and hardware being used.
+This article cannot provide specific test result numbers to expect as every environment is unique and the total load for an array is different.
+You must establish a baseline throughput. You need to make an apples to apples comparison between an ESX host running a single virtual machine and a physical host. If the hardware between the two are identical and the operating system version between the physical host and the virtual machine are also the same, these two systems perform as close to each other as possible. If they do not perform similarly, other factors (BUSlogic vs. LSIlogic) need to be taken into consideration to explain the difference.
+ 
+To establish a baseline:
+Create a virtual machine and put the operating system vmdk on local storage. This must be the same operating system as your physical host. If you choose a Windows operating system, ensure that you select LSIlogic as your controller type.
+Carve out a small LUN to attach to this virtual machine via RDM. A 5GB LUN is a sufficient size to work with, though the size really does not play a factor. If you have an RDM LUN that is already available, you can use it instead.
+Attach the LUN in RDM mode to the virtual machine. Whether you use physical, virtual, or none for BUS sharing does not matter.
+After you have booted the virtual machine, install a program similar to IOMeter ( http://www.iometer.org/) or HD_Speed( http://www.steelbytes.com/?mid=20) in the virtual machine.
+
+Note: The preceding links were correct as of October 13, 2016. If you find the link is broken, provide a feedback and the VMware employee will update the link.
+
+IOMeter is a more intuitive application and allows you to run various different kinds of tests however HD Speed is much easier to work with and provides accurate results that are simple to read and understand. Both applications are free to download and use.
+
+
+Note: VMware does not endorse or recommend any particular third party utility, nor is the list above meant to be exhaustive.
+
+Load up the application and select the RDM LUN to test. The following steps are using HD Speed for this test.
+Leave everything set to default and begin your read test.
+
+Caution: A write test is destructive to the data on the RDM LUN.
+
+Allow this test to run for at least 60 to 300 seconds. You have now established your baseline numbers.
+Power off the virtual machine.
+Remove the RDM LUN from the virtual machine.
+Present the LUN to your physical host.
+Repeat steps 4 through 7.
+ 
+The results must be similar. If they are not, you need to review why.
+Possible factors include:
+Incorrect virtual machine test configuration (using BUSlogic instead of LSIlogic)
+ESX host and physical host are connected to different switches
+ESX host and physical host do not have identical hardware/firmware
+Incorrect host mode settings on the SAN for the ESX host
+If the virtual machine is not performing well, review /var/log/vmkernel for possible reasons for this degradation. If both the physical host and virtual machine are performing poorly but identically, review the array and switch configuration.
+A possible reason for equally poor performance may be write cache on the array controllers or over commitment of the array in general.
