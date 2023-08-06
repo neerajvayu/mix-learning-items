@@ -1,0 +1,29 @@
+Let’s take a machine with Ubuntu 14.4 server installed in it.
+I am assuming minimal installation
+You can create git clone of openstack devstack package
+First install git by apt-get install git
+Now run git command which will create a clone git clone https://git.openstack.org/openstack-dev/devstack
+cd devstack; ./stack.sh
+These are the steps required to install it but the moment you will start it will show you multiple errors.
+The very first error is it will tell you can you can’t run stack.sh in root mode
+You can create a user stack and set the password in additional way
+#useradd stack;passwd stack
+But I recommend to run the script which you can fine in devstack directory which will create required users.
+#./tools/create-stack-user.sh
+[Note- make sure you have mapped the hostname in DNS , if not put the entry in /etc/hosts file]
+Now switch to the user stack and run the script which will show you permission error.
+Change the ownership and permission by below command
+#chown -R stack:stack /tech-jockey_test/devstack
+
+Now I think it’s time to run the final script but it will create issue and give you error that it is not able to download the package from GIT_BASE=${GIT_BASE:-git://www.github.com}
+Now your task is to open a file vim /devstack/stackrc
+Go to line no 164 and modify the line as follows(replace git with https).
+GIT_BASE=${GIT_BASE:-https://www.github.com}
+All set now run the script ./stack.sh it will ask you to enter password for its diff services.
+Once you enter the passwords it will take around 20 minute to install the bundle and then you can access openstack by opening its in browser.
+This is your host IP address: 192.168.122.123
+This is your host IPv6 address: ::1
+Horizon is now available at http://dummy_IP/
+Keystone is serving at http://Dummy_IP:5000/
+The default users are: admin and demo
+The password: dummy
