@@ -1,0 +1,7 @@
+Download the fcinfo for windows Utility from the link
+
+http://www.microsoft.com/en-us/download/details.aspx?id=17530
+
+Install and run from the below Command Line
+
+C:\Windows\SysWOW64>fcinfo /details
