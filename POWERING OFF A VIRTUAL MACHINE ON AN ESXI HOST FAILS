@@ -1,0 +1,94 @@
+Determining the virtual machine's location
+Determine the host on which the virtual machine is running. This information is available in the virtual machine's Summary tab in VI Client. Subsequent commands will be performed on, or remotely reference, the ESXi host where the virtual machine is running.
+Using the ESXi esxcli command to power off a virtual machine
+The esxcli command can be used locally or remotely to power off a virtual machine running on ESXi 5.x or later.
+Open a console session where the esxcli tool is available, either in the ESXi Shell, the vSphere Management Assistant (vMA), or the location where the vSphere Command-Line Interface (vCLI) is installed.
+Get a list of running virtual machines, identified by World ID, UUID, Display Name, and path to the .vmx configuration file by running this command:
+
+esxcli vm process list
+
+Power off one of the virtual machines from the list by running this command:
+
+esxcli vm process kill --type= [soft,hard,force] --world-id= WorldNumber
+
+Notes:
+Three power-off methods are available. Soft is the most graceful, hard performs an immediate shutdown, and force should be used as a last resort.
+
+Alternate power off command syntax is: esxcli vm process kill -t [ soft,hard,force] -w WorldNumber
+Repeat Step 2 and validate that the virtual machine is no longer running.
+For ESXi 4.1:
+Get a list of running virtual machines, identified by World ID, UUID, Display Name, and path to the .vmx configuration file by running this command:
+
+esxcli vms vm list
+
+Power off one of the virtual machines from the list by running this command:
+
+esxcli vms vm kill --type= [soft,hard,force] --world-id= WorldNumber
+Using the ESXi command-line utility vim-cmd to power off the virtual machine
+On the ESXi console, enter Tech Support mode and log in as root.
+Get a list of all registered virtual machines, identified by their VMID, Display Name, and path to the .vmx configuration file by running this command:
+
+vim-cmd vmsvc/getallvms
+
+Get the current state of a virtual machine by running this command:
+
+vim-cmd vmsvc/power.getstate VMID
+
+Shutdown the virtual machine using the VMID found in Step 2 and run this command:
+
+vim-cmd vmsvc/power.shutdown VMID
+
+Note: If the virtual machine fails to shut down, run this command:
+
+vim-cmd vmsvc/power.off VMID
+Sending signals on ESXi to power off the virtual machine
+A virtual machine can be halted from the command line by sending signals to the process.
+
+Warning: This procedure is potentially hazardous to the ESXi host. If you do not identify the appropriate process ID (PID) and kill the wrong process, it may have unexpected results. If you are not comfortable with the following procedure, file a support request with VMware Technical Support and note this Knowledge Base article ID (1014165) in the problem description.
+
+In ESXi 3.5 and above, you can use the kill command to send a signal to, and terminate, a running virtual machine process.
+On the ESXi console, enter Tech Support mode and log in as root.
+Determine if the virtual machine process is running on the ESXi host by running this command:
+
+ps | grep vmx
+
+The output appears similar to:
+
+7662 7662 vmx /bin/vmx
+7667 7662 vmx /bin/vmx
+7668 7662 mks:VirtualMachineName /bin/vmx
+7669 7662 vcpu-0:VirtualMachineName /bin/vmx
+
+Several rows are returned, one for each vmx process. Identify the parent vmx process for the target virtual machine. The first column contains the PID, and the second contains the parent's PID. Ensure you terminate only the parent process. The parent Process ID (PID) for each process is listed in the second column, identified in this example in bold. Take note of this number for use in the following steps.
+
+Caution: Ensure that you identify the line specific only to the virtual machine you are attempting to repair. If you continue this process for a virtual machine other than the one in question, you can cause downtime for the other virtual machine.
+
+If the vmx process is listed, terminate the process by running this command:
+
+kill ProcessID
+
+Wait 30 seconds and repeat step 2 to check for the process again.
+If it is not terminated, run this command:
+
+kill -9 ProcessID
+
+Wait 30 seconds and check for the process again.
+In ESXi 4.x and above, you can use the k command in esxtop to send a signal to, and kill, a running virtual machine process.
+On the ESXi console, enter Tech Support mode and log in as root.
+Run the esxtop utility by running this command:
+
+esxtop
+
+Press c to switch to the CPU resource utilization screen.
+Press Shift+v to limit the view to virtual machines. This may make it easier to find the Leader World ID in step 7.
+Press f to display the list of fields.
+Press c to add the column for the Leader World ID.
+Identify the target virtual machine by its Name and Leader World ID (LWID).
+Press k.
+At the World to kill prompt, type in the Leader World ID from step 6 and press Enter.
+Wait 30 seconds and validate that the process is not longer listed.
+Note:  If the above procedures did not resolve the issue and the ESX\ESXi host is responsive, it may need to be rebooted to put the virtual machine in a powered off state.
+Additional Information
+If a virtual machine cannot be powered off using any of these methods, it usually indicates a problem with the underlying infrastructure, such as the ESXi host or its backing hardware.
+
+If a problem is suspected with the ESXi host that is preventing the shutdown of virtual machines, vMotion all unaffected virtual machines off the host, and force the host to halt with a purple diagnostic screen
