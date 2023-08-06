@@ -1,0 +1,99 @@
+
+Central execution
+Hosted VDI:-
+Apps and desktop
+Dedicated and pooled desktop
+Virtual machine
+
+Hosted shared:-
+Apps and desktop
+Windows server
+System based desktop or apps
+
+Physical PC
+Apps and desktop
+HDX 3D pro enabled
+Workstation or remote PC
+Access technology
+APPDNA – It is a tool for which is used to check the compatibility of application to run with Citrix
+Local execution:-
+Local hypervisor
+Desktop
+Type 1 hypervisor for PC and laptop with xen client synchronizer
+
+Hosted VDI :-It is dedicated VDI which is one to one connection. It has two types
+Non-persistent – user have ability to change everything but after restart of the machine all the os or application related change will be reset.
+Persistent – it is pure dedicated ,ie user change will remain after restart
+Personal disk(pvdisk) – user changes will be saved here and after restart cirtix take settings from here
+
+
+Licensing :-
+VDI Edition-- Scalable VDI only implementations with HDX™ technology
+Enterprise Edition-- Enterprise class desktop virtualization with FlexCast™ delivery technology
+Platinum Edition-- Comprehensive desktop virtualization solution with advanced networking, management and security
+
+License server should install separately and the job of license server is to allocate licenses from the file “License.LIC” and this file contains product key in encrypted format
+License will be issued on the basis of hostname of the host which is case censitive.
+License file should be located at “program files\citrix\my files
+If you got the new licenses you can paste at this location and restart the license server
+For accessing the license console, port 8082 should be allowed.
+You can access the console using the URL http://serverFqdn:8082
+It is not necessary to store the license file locally , you can keep this at the network location also where vendor daemon service will be used and port no 7279 should be allowed
+
+How to setup the environment:-
+1.       Install the citrix server (controller)—it support up to 5000 connection with a single controller
+2.       Install citrix studio
+3.       Create site in the studio and configure required parameter
+4.       Install citrix director
+5.       Install virtual delivery agent
+There are two type of service which VDA provide is
+Hosted desktop/apps – It is used for server os where server VDA is used.
+Hosted VDI – It is used for desktop os where desktop VDA is used.
+6.       Create machine catalog
+How VDA works – VDA used application like ms-office firefox on the 2008 server os then its communicate with the studio and then catalog
+
+
+Communication:-
+
+
+https://github.com/neerajvayu/images/blob/main/citrix%20central%20execution.png
+
+1.       User connects to the store front and clicks on any application or user ask for vdi through receiver.
+2.       Store font talk to the controller which is inbuilt in the studio, store front or receiver send an authentication req to the controller
+3.       Controller has XXML(XEN Extensible markup language service) running which has the information that how to get authentication done.
+4.       Controller talks with ADDS server on port no 389 for the authentication.
+5.       After the confirmation from ldap , controller then talk to the DB about what type of access user has.
+6.       DB return the access type and send it to the controller
+7.       Again XXML service creates a temp XSL with the details given by DB and sends it to the license server.
+8.       Now license server’s task is to validate whether license for the specified service is available or not
+9.       It license is granted it sends the req to the Hypervisor where VDA is running to do further process
+10.   Once VDA receive the req it append the request packet with the hypervisor details and again send it to controller.
+11.   In the controller XXML service again create an XSL and send it to store front with all the details.
+12.   Now the task of store front is to create a blank .ica file and fill it with the detail which came from controller
+13.   After creation of the .ica file it send it back to the receiver on the user’s machine
+14.   Now ICA protocol starts working and creates direct session with the hypervisor and maintains the session.
+15.   In the ICA there is a kind of ASP (Access station protocol) is inbuilt to maintain the session with the hypervisor.
+
+
+Inside the DB:-
+Citrix create two databases to maintain the environment.
+1.       Primary Database – It contain site info, static info and dynamic info
+2.       Secondary Database – It contain configuration logs and monitoring data
+Since secondary database do lots of transaction on every request so it is recommended to migrate it to another server after creation.
+Controller and Storage:-
+
+
+1.       Controller creates vm in Hypervisor with the help of MCS
+2.       For each vm MCS creates two disk in the storage
+3.       First disk is the ID disk which store the information of individual vms like machine account or anything go to the AD and second disk is needed by os to run the services for that vm
+4.       When we create vm from a master image then at that point of time a redundant copy of that master image created which is shared by rest of the vms for their services.
+5.       In the hypervisor there is a service running called intellicache which cache first VM’s startup and application settings to the hypervisor and all rest of the vms referred to get their first setting from here
+
+
+
+
+
+
+
+
+
