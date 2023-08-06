@@ -1,0 +1,25 @@
+Here is what you need to do:
+Step 1: Restart your machine. Its always good to go for the ‘when-nothing-works-try-this’ solution
+Step 2: Be very quick and sharp about this step as it needs to be done in matter of seconds.
+The moment you see a black screen with progress bar saying LOADING HYPERVISOR , enter SHIFT + o (the letter, not the number)  instantly.
+`shift + o’ is a directive to boot options of ESXi hypervisor.
+Step 3: Now that you are on an interactive boot shell of ESXi, enter this command :
+> noipmiEnabled
+That will tell ESXi boot not to load ipmi drivers for next reboot.
+* Careful, this you will need to do at every reboot of your machine
+Step 4: now hit enter and and let it go through the booting process.
+Step 5: watch without any panic , the ESXi now should load all modules except ipmi and there you are at login screen.
+
+
+
+Second Method:-
+
+First try setting IPMI to Shared in BIOS, if the option is available. When booting your installation media, press Shift O to display the boot arguments and add noipmiEnabled to the boot arguments. Remember to do the same once the installation/upgrade is complete. Manually turn off or remove the module by turning the option VMkernel.Boot.ipmiEnabled off in vSphere or using the commands below:
+# Do a dry run first:
+esxcli software vib remove –dry-run –vibname ipmi-ipmi-si-drv
+# Remove the module:
+esxcli software vib remove –vibname ipmi-ipmi-si-drv
+or try the following command in an unsupported shell connection:
+esxcfg-module -d ipmi_si_drv
+This disables the module although it still gets loaded.
+Use a -l argument to see what modules are enabled/loaded and check that your desired one is disabled. This appears to be persistent across a reboot.
