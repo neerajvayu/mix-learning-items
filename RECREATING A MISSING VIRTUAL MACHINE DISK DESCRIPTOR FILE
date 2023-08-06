@@ -1,0 +1,141 @@
+Details
+This article provides steps to recreate a lost virtual disk descriptor file (VMDK). You may need to recreate missing header/descriptor files if:
+The virtual machine disk file listed in the Datastore Browser is your virtual machine's flat file, and does not have an icon.
+When powering on a virtual machine, you see a File not found error.
+The flat file exists when viewing the virtual machine's directory through the terminal, VMware vSphere Management Assistant (vMA), or VMware Command-Line Interface (vCLI).
+The disk descriptor file for the virtual machine's disk does not exist or is corrupted.
+
+Note: For additional symptoms and log entries, see the Additional Information section.
+Solution
+Note: Command-line methods, such as the one covered in this video, are available for ESXi 6.0, 5.x, 4.1, and earlier.
+
+
+
+
+Overview steps
+Note: VMware recommends to attempt to restore the missing descriptor file from backups if possible. If this is not possible, proceed with recreating the virtual machine disk descriptor file.
+
+To create a virtual machine disk descriptor file:
+Identify the size of the flat file in bytes.
+Create a new blank virtual disk that is the same size as the original. This serves as a baseline example that is modified in later steps.
+
+Note: This step is critical to assure proper disk geometry.
+
+Rename the descriptor file (also referred to as a header file) of the newly-created disk to match the name of the original virtual disk.
+Modify the contents of the renamed descriptor file to reference the flat file.
+Remove the leftover temporary flat file of the newly-created disk, as it is not required.
+Note: This procedure will not work on virtual disks configured with a Para-virtualized SCSI controller in the virtual machine as the virtual machine may not boot. However, there are reports that if the Para-virtualized SCSI controller is used, the new descriptor file can also be updated with ddb.adapterType = pvscsi replacing ddb.adapterType = lsilogic in the descriptor file.
+Detailed steps
+To create a virtual machine disk:
+Log in to the terminal of the ESXi/ESX host
+Navigate to the directory that contains the virtual machine disk with the missing descriptor file using the command:
+
+# cd /vmfs/volumes/myvmfsvolume/mydir
+
+Notes:
+If you are using a version of ESXi, you can access and modify files and directories using the vSphere Client Datastore Browser or the vifs utility included with the vSphere CLI. For more information, see the section Performing File System Operations in the vSphere Command-Line Interface Documentation.
+If you are using VMware Fusion, the default location for the virtual machine files is the home/Documents/Virtual Machines.localized/virtual_machine/ folder, where home is your home folder, and virtual_machine is the name of the virtual machine.
+
+Identify the type of SCSI controller the virtual disk is using by examining the virtual machine configuration file (.vmx ). The controller is identified by the line scsi#.virtualDev , where # is the controller number. There may be more than one controller and controller type attached to the virtual machine, such as lsisas1068 (which is the LSILogic SAS controller), lsilogic , or buslogic . This example uses lsilogic :
+
+scsi0.present = "true"
+scsi0.sharedBus = "none"
+scsi1.present = "true"
+scsi1.sharedBus = "virtual"
+scsi1.virtualDev = "lsilogic"
+
+Identify and record the exact size of the -flat file using a command similar to:
+
+# ls -l vmdisk0-flat.vmdk
+
+-rw------- 1 root root 4294967296 Oct 11 12:30 vmdisk0-flat.vmdk
+
+Use the vmkfstools command to create a new virtual disk:
+
+# vmkfstools -c 4294967296 -a lsilogic -d thin temp.vmdk
+
+The command uses these flags:
+
+-c size
+
+This is the size of the virtual disk.
+
+-a virtual_controller
+
+Whether the virtual disk was configured to work with BusLogic, LSILogic (for both lsilogic and lsilogic SAS), Paravirtual, or IDE:
+Use lsilogic for virtual disk type "lsilogic" and "lsisas1068"
+
+-d thin
+
+This creates the disk in thin-provisioned format.
+
+Note: To save disk space, we create the disk in thin-provisioned format using the type thin . The resulting flat file then consumes minimal amounts of space (1 MB) instead of immediately assuming the capacity specified with the -c switch. The only consequence, however, is the descriptor file contains an extra line that must be manually removed in a later step.
+
+The temp.vmdk and temp-flat.vmdk files are created as a result.
+
+Delete temp-flat.vmdk , as it is not needed. Run the command:
+
+# rm -i temp-flat.vmdk
+Rename temp.vmdk to the name that is required to match the orphaned .flat file (or vmdisk0.vmdk , in this example):
+
+# mv -i temp.vmdk vmdisk0.vmdk
+Edit the descriptor file using a text editor:
+
+Under the Extent Description section, change the name of the .flat file to match the orphaned .flat file you have.
+
+Find and remove the line ddb.thinProvisioned = "1" if the original .vmdk was not a thin disk. If it was, retain this line.
+
+# Disk DescriptorFile
+version=1
+CID=fb183c20
+parentCID=ffffffff
+createType="vmfs"
+
+# Extent description
+RW 8388608 VMFS "vmdisk0-flat.vmdk"
+
+# The Disk Data Base
+#DDB
+
+ddb.virtualHWVersion = "4"
+ddb.geometry.cylinders = "522"
+ddb.geometry.heads = "255"
+ddb.geometry.sectors = "63"
+ddb.adapterType = "lsilogic"
+ddb.thinProvisioned = "1"
+
+The virtual machine is now ready to power on. Verify your changes before starting the virtual machine.
+To check the disk chain for consistency, run this command against the disk descriptor file:
+
+For ESXi 6.0 and 5.x:
+
+# vmkfstools -e filename.vmdk
+
+For a complete chain, you see output similar to:
+Disk chain is consistent
+
+For a broken chain, you see a summary of the snapshot chain and then an output similar to:
+Disk chain is not consistent : The parent virtual disk has been modified since the child was created. The content ID of the parent virtual disk does not match the corresponding parent content ID in the child (18)
+Additional Information
+You experience these additional symptoms:
+In the virtual machine's vmware.log file, you see entries similar to:
+<YY-MM-DD>T: vmx| DISKLIB-LINK : "myvm.vmdk" : failed to open (The system cannot find the file specified).
+T: vmx| DISKLIB-CHAIN : "myvm.vmdk" : failed to open (The system cannot find the file specified).
+T: vmx| DISKLIB-LIB : Failed to open 'myvm.vmdk' with flags 0xa (The system cannot find the file specified).
+T: vmx| Msg_Post: Error
+T: vmx| [msg.disk.fileNotFound] VMware ESX Server cannot find the virtual disk "myvm.vmdk". Please verify the path is valid and try again.
+T: vmx| [msg.disk.noBackEnd] Cannot open the disk 'myvm.vmdk' or one of the snapshot disks it depends on.
+T: vmx| [msg.disk.configureDiskError] Reason: The system cannot find the file specified
+In the /var/log/hostd.log file of an ESXi 5.0 host, you see entries similar to:
+T.704Z [74258B90 info 'Libs'] FoundryVMDBPowerOpCallback: VMDB reports power op failed for VM /vmfs/volumes/4e1
+c0986-14d88a26-416a-000c2988e4dd/myvm/myvm.vmx with error msg = "VMware ESX cannot find the virtual disk "myvm_2.vmdk". Verify the path is valid and try again.
+--> Cannot open the disk 'myvm_2.vmdk' or one of the snapshot disks it depends on.
+--> Reason: The system cannot find the file specified." and error code -57.
+2011-07-13T17:59:48.705Z [74258B90 info 'Libs'] Vix: [3057 foundryVMMsgPost.c:1354]: Error VIX_E_FAIL in FoundryVMGetMsgPostError
+(): Unknown error
+...
+T.775Z [743C0B90 info 'vm:/vmfs/volumes/4e1c0986-14d88a26-416a-000c2988e4dd/myvm/myvm.vmx' opID=841A7BF1-00000188] Failed to do Power Op: Error: (4) A file was not found
+
+Note: The preceding log excerpts are only examples. Date, time, and environmental variables may vary depending on your environment.  
+
+Each disk drive for a virtual machine consists of a pair of .vmdk files. One is a text file containing descriptive data about the virtual hard disk, and the second is the actual content of that disk. For example, a virtual machine named examplevm has one disk attached to it. This disk is comprised of a examplevm.vmdk descriptor file of under 1 KB, and a 10 GB examplevm-flat.vmdk flat file which contains virtual machine content.
