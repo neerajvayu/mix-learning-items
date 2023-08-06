@@ -1,0 +1,65 @@
+Guys,
+In a VMware environment often i get this requirement when people ask for separate iscsi lun to test MS cluster.
+It's mandatory item for quorum disk.
+Challenge -- Storage team have their own standard and they don't want any interruption in their standard as it may affect planned capacity.
+There are some famous solution in the market which are:-
+1. Use StarWind software to create your own private SAN on vm -- this software is free for one month only.
+2.Use OpenFiler which is opensource and with many features -- It do not support Microsoft clustering technique, means you can not create quorum disk.
+3.Use Nexenta software defined storage -- It is free upto 18TB but configuration is big headache.
+4.Attach a disk in Linux and configure it as ISCSI storage -- Management is not friendly
+Microsoft released their iSCSI Software Target.
+To general they opened up a world of possibilities for smaller companies (as well as IT Pros and hobbyists) who use servers,
+but cannot justify spending thousands of dollars on a Storage Area Network (SAN) device.
+In this article I will show you how to create a virtual SAN in your environment.
+Installing the iSCSI Software Target (available here: http://www.microsoft.com/downloads/en/details.aspx?FamilyID=45105d7f-8c6c-4666-a305-c8189062a0d0)
+or http://www.microsoft.com/en-us/download/details.aspx?id=19867 is a simple process.
+It comes as a self-extracting package which installs seamlessly on any Windows Server 2008 R2 operating system (RTM or SP1). Once installed it appears under Administrative Tools.
+Before we create our iSCSI Target we will create two VHD files: One as our Witness Disk and one for Shared Storage. Right-click on Devicesand click Create Virtual Disk.
+In the Create Virtual Disk Wizard type the full name (including directory structure) of the VHD file you want to create. The Witness Disk does not have to be very big (8GB is my norm), but the Shared Storage Disk should be as large as you would need it to be… depending on what you will be storing it might need to be quite large.
+In the Welcomescreen click Next.
+In the Filescreen type the name and location of the VHD file you want to create (c:\disks\Witness.vhd) and click Next.
+In the Sizescreen enter the size of the VHD in megabytes (for the Witness disk enter 8192) and click Next.
+In the Descriptionscreen enter a description (Witness Disk) and click Next.
+On the Access screen click leave the fields blank and click Next. We will configure this once we create our Target.
+On the Completing the Create Virtual Disk Wizardscreen click Finish.
+Make sure to repeat these steps for the Shared Storage disk, changing only the file name, description, and size appropriately.
+For each VHD two files will be created – the Virtual Hard Disk file which will be Fixed Disks, and a Microsoft iSCSI Software Target Change Tracking Bitmap file, which is a .cbm file that Microsoft uses for integrity checking.
+Now that our storage is allocated we will create our iSCSI Target. To begin we will right-click on iSCSI Targets in the navigation pane and click Create iSCSI Target.
+In the Welcome screen click Next.
+In the iSCSI Target Identificationscreen enter the name of your iSCSI target. This will be the name of yourLogical Unit Number (LUN). You can also optionally enter a description. Click Next.
+NOTE: Although not a requirement, it is a best practice to exclude punctuation, especially periods and dashes, as they are used in the iSCSI Qualified Name (IQN) that will be created by both the target and initiator.
+In the iSCSI Initiators Identifiersscreen we will select the Windows machines that will be able to access the iSCSI target. Click on Advanced…to enter the DNS domain name, IP address, MAC address, or multiple pre-determined IQNs. In most cases the iSCSI Initiators of your devices will not have been enabled yet, but by entering their IP address you can save extra steps later.
+There are two components of an iSCSI SAN – the target, which is the LUN on the actual SAN device, and the initiator, which is the computer that will be accessing it. Because SANs are commonly used with clusters, it is possible to have several initiators configured to access a single target. However if the target is not configured for the initiator, it will be invisible to that system when it tries to access it.
+Click Next on the iSCSI Initiators Identifiersscreen, then click Finishon the Completing the Create iSCSI Target Wizard screen.
+At this point your iSCSI target has been created. We can look at the properties by right-clicking on the iSCSI Target we created and clickProperties.
+The LUN properties box should have five tabs: General, iSCSI Initiators, Authentication, Virtual Disks, and Advanced.
+Under the General tab you will see (for the first time?) your IQN. In the example created for this article it is iqn.1991-05.com.microsoft:ski-storage-lun1-target. This convention may appear long and convoluted, but it can be broken down into two parts… the device manufacturer and the actual target.
+Because we are using the iSCSI Software Target, the manufacturer is Microsoft, and because their domain name (microsoft.com) was registered in May of 1991 the first part of our iqn is 1991-05.com.microsoft. (If you had an EMC device, you would have an IQN of iqn.1997-07.com.emcJ
+The first part of the IQN is separated from the second part by a colon. The actual target (LUN1) is on a server called Ski-Storage, hence ski-storage-lun1-target.
+Under the iSCSI Initiators tab you can see, add, edit, and remove initiators. This will be important if you plan to add new initiators to a cluster, for example.
+Under the Authentication tab you can set CHAP (Control Host Authentication Protocol). This is the only method of authentication supported by iSCSI.
+Under the Virtual Disks tab we will add our pre-created VHDs.
+1) Click Add…
+2) Select both disks and click OK.
+3) In the LUN Properties screen click OK.
+At this point our LUN is created and populated, and ready to go! Now it is a simple matter of pointing our initiators to the device.
+In Windows Server, click Start – Administrator Tools – iSCSI Initiator to launch the iSCSI Initiator. If this is the first time you are running it on your server you will be warned that in order to run the Initiator, the Microsoft iSCSI Initiator Service must be running, and that Windows will configure it to auto-start.
+In the iSCSI Initiators Properties box there are six tabs: Targets, Discovery, Favorite Targets, Volumes and Devices, RADIUS, and Configuration.
+In the Targets tab type the IP address of the server on which you configured your software target, and click Quick-Connect…In the event of a successful connection a Quick Connect window will appear with the IQN of your iSCSI target and the statusConnected in the Status column. Click Done to close the Quick Connect window.
+The IQN of your target will now appear in the Discovered Targetslist on the Targets tab.
+Click on the Volumes and Devices tab of the iSCSI Initiator Properties window. The Volume List should be blank. Click Auto Configure to automatically configure all of the devices on the discovered target. Two devices should appear.
+The rest of what we are doing should be pretty familiar to you.
+1) Open Server Manager.
+2) Navigate to Disk Management.
+There should be two new disks attached to your server.
+3) Right-click the 8.00 GB disk and click on-line. Right-click the 64.00 GB disk and click on-line.
+4) Right-click the 8.00 GB disk and click Initialize. The Initialize Disk screen should appear, allowing you to select both disks to be initialized. Click OK.
+5) Create a Simple Volume on each disk.
+On the 8.00 GB disk right-click on the unallocated space and click Create Simple Volume.
+In the New Simple Volume Wizardclick Next.
+In the Specify Volume Sizescreen click Next.
+In the Assign Drive Letter or Pathscreen select Qand click Next.
+In the Format Partitionscreen change the Volume Label to Witness Diskand click Next.
+On the Completing the New Simple Volume Wizardscreen click Finish.
+Repeat the same steps for the 64.00 GB disk, replacing the drive letter with M and the label to Shared Storage.
+At this point your LUN is created, formatted, and ready for data!
