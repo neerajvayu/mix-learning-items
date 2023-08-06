@@ -1,0 +1,48 @@
+Symptoms
+Cannot connect directly to the ESXi host or manage under vCenter server.
+vCenter Server displays the error:
+
+Virtual machine creation may fail because agent is unable to retrieve VM creation options from the host
+Purpose
+For troubleshooting ESXi connectivity issue, restart the management agents on your ESXi host.
+Warning: If LACP is configured on the VSAN network, do not restart management agents on ESXi hosts running Virtual SAN.
+Restarting the management agents may impact any tasks that are running on the ESXi host at the time of the restart.
+Check for any storage issues before restarting the Host deamon hostd service or services.sh
+Resolution
+Restart Management agents in ESXi Using Direct Console User Interface (DCUI):
+Connect to the console of your ESXi host.
+Press F2 to customize the system.
+Log in as root.
+Use the Up/Down arrows to navigate to Troubleshooting Options > Restart Management Agents.
+Press Enter.
+Press F11 to restart the services.
+When the service restarts, press Enter.
+Press Esc to log out.
+
+Restart Management agents in ESXi Using ESXi Shell or Secure Shell (SSH):
+
+Log in to ESXi Shell or SSH as root.
+
+Restart the ESXi host daemon and vCenter Agent services using these commands:
+
+/etc/init.d/hostd restart
+
+/etc/init.d/vpxa restart
+Note: In ESXi 4.x, run this command to restart the vpxa agent:
+
+service vmware-vpxa restart
+
+Alternatively:
+ 
+To reset the management network on a specific VMkernel interface, by default vmk0, run the command:
+
+esxcli network ip interface set -e false -i vmk0; esxcli network ip interface set -e true -i vmk0
+
+Note: Using a semicolon (;) between the two commands ensures the VMkernel interface is disabled and then re-enabled in succession. If the management interface is not running on vmk0, change the above command according to the VMkernel interface used.
+
+To restart all management agents on the host, run the command:
+
+services.sh restart
+Caution:
+If LACP is enabled and configured, do not restart management services using services.sh command. Instead restart independent services using the /etc/init.d/module restart command.
+If the issue is not resolved, and you are restarting all the services that are a part of the services.sh script, take a downtime before proceeding to the script.
