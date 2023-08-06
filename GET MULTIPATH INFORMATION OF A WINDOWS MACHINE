@@ -1,0 +1,1 @@
+(gwmi -Namespace root\wmi -Class mpio_disk_info).driveinfo | % {Write-host "Name: $($_.name) Paths: $($_.numberpaths)"}
