@@ -1,0 +1,94 @@
+Method 1
+This method is fully supported by Microsoft and is relatively strait forward.
+Step 1: Import the FailoverClusters module into your PowerShell Window  
+              Import-Module FailoverClusters
+Step 2: Get the CSV object your interested in using the Get-ClusterSharedVolume cmdlet
+              $csv = Get-ClusterSharedVolume –Name “MyCSV”
+Step 3: Get the Cluster Parameters for the CSV object using Get-ClusterParameter
+              $CSVParams = Get-ClusterParameter -InputObject $csv
+Step 4: Filter to get just the DiskIdGuid 
+              ($CSVParams | Where-object -FilterScript {$_.Name -eq "DiskIdGuid"}).Value
+Ok now you’ve got the GUID for the LUN it will be something like {32443078-9afc-4c0a-b142-466f8f564051}.
+Step 5: Start diskpart.exe
+Step 6: Start iterating over disks using select disk and then uniqueid disk until you match the GUID’s. It will look like this: 
+C:\Users\taylorb>diskpart.exe
+Microsoft DiskPart version 6.1.7601
+Copyright (C) 1999-2008 Microsoft Corporation.
+On computer: 37-4611K2713G
+DISKPART> select disk 1
+Disk 1 is now the selected disk.
+DISKPART> uniqueid disk
+Disk ID: {F1B5319E-FF92-40BB-9BC9-D5FFAD0AD66B}
+DISKPART> select disk 2
+Disk 2 is now the selected disk.
+DISKPART> uniqueid disk
+Disk ID: {32443078-9AFC-4C0A-B142-466f8f564051}
+
+
+Step 7: Once you find the disk you want you can use the detail disk command to get more information.  It will look like this:
+
+DISKPART> detail disk
+IBM 2810XIV  Multi-Path Disk Device
+Disk ID: {32443078-9AFC-4C0A-B142-466f8f564051}
+Type   : FIBRE
+Status : Reserved
+Path   : 0
+Target : 1
+LUN ID : 2
+Location Path : UNAVAILABLE
+Current Read-only State : No
+Read-only  : No
+Boot Disk  : No
+Pagefile Disk  : No
+Hibernation File Disk  : No
+Crashdump Disk  : No
+Clustered Disk  : Yes
+There are no volumes.
+
+
+Method 2
+Again I must reiterate this is not an officially supported API it has no warrantee – it may break at any time and Microsoft Support can not and will not help you with it.  Now that the disclaimer is over – in this example I am using the VDS api’s to do the mapping for me.
+
+Script:-
+ 
+#Load the Microsoft Storage VDS Library
+#This is an undocumented, unsupported library, there is no warrantee nor gaurantees. [System.Reflection.Assembly]::LoadWithPartialName("Microsoft.Storage.Vds") | Out-Null $VdsServiceLoader = New-Object Microsoft.Storage.Vds.ServiceLoader $VdsService = $VdsServiceLoader.LoadService($null) $VdsService.WaitForServiceReady() $VdsService.Reenumerate()
+#Build up a collection of all disks presented to the os $Disks = ($VdsService.Providers |% {$_.Packs}) |% {$_.Disks}
+#Import the FailoverClusters module Import-Module FailoverClusters
+#Retreve all of the CSV Lun’s $AllCSVs = Get-ClusterSharedVolume foreach ($Csv in $AllCSVs)
+{
+    $CSVParams = Get-ClusterParameter -InputObject $Csv
+    
+    #Retreve the DiskIDGuid Object from the Cluster Parameters $DiskGUIDString = ($CSVParams | Where-object -FilterScript {$_.Name -eq "DiskIdGuid"}).Value
+    
+    #Match up the DiskID’s $Disk = ($Disks | Where-Object -FilterScript {$_.DiskGuid -eq $DiskGUIDString})
+        Write-Host "CSV ClusterResourceName: " $Csv.Name
+        Write-Host "DiskID: " $DiskGUIDString
+        Write-Host "DiskFriendlyName: " $Disk.FriendlyName
+        Write-Host "DiskName: " $Disk.Name
+        Write-Host "DiskAddress: " $Disk.DiskAddress
+        Write-Host
+}
+
+Sample Output
+
+
+
+ Windows PowerShell
+Copyright (C) 2009 Microsoft Corporation. All rights reserved.
+PS C:\Users\taylorb>.\GetCSVDevInfo1.ps1
+CSV ClusterResourceName:  Cluster_CSV1_IBMXIV
+DiskID:  {32443078-9afc-4c0a-b142-466f8f564051}
+DiskFriendlyName:  IBM 2810XIV  Multi-Path Disk Device
+DiskName:  \\?\PhysicalDrive2
+DiskAddress:  Port1Path0Target1Lun2
+CSV ClusterResourceName:  Cluster_CSV2_IBMXIV
+DiskID:  {ee36e403-75cb-4e23-87b4-e82af7949f4e}
+DiskFriendlyName:  IBM 2810XIV  Multi-Path Disk Device
+DiskName:  \\?\PhysicalDrive3
+DiskAddress:  Port1Path0Target1Lun3
+CSV ClusterResourceName:  Cluster_CSV3_IBMXIV
+DiskID:  {5db28bcb-6ed3-4b80-b363-861a25cc10e4}
+DiskFriendlyName:  IBM 2810XIV  Multi-Path Disk Device
+DiskName:  \\?\PhysicalDrive4
+DiskAddress:  Port1Path0Target1Lun4
