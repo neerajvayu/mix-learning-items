@@ -1,0 +1,56 @@
+Symptoms
+When trying to boot Windows, you receive the error:
+
+An operating system wasn’t found. Try disconnecting any drives that don’t contain an operating system.
+
+Press Ctrl+Alt+Del to restart
+
+Resolution
+A bootable USB or DVD with Windows 7 or higher is needed to bring up the Command Prompt.
+
+Bring up the command prompt:
+Boot from any DVD or USB Windows 7, 8, or 10 media.
+Once you have reached the Windows Setup screen (where you select the Language, Time and Keyboard settings), press the SHIFT + F10 keys to bring up the Command Prompt.
+
+Find out whether your disk is set to GUID Partition Table (GPT) or Master Boot Record (MBR):
+In the Command Prompt, type diskpartand press Enter.
+Type list disk and press Enter.
+Look for your disk and see if the GPT column has an asterisk (*) – this will indicate the disk is GPT. If no asterisk is found, then the disk is set as MBR.
+Type exit and press Enter.
+If the type is MBR:
+
+From the Command Prompt, type dir a: and press Enter.
+If drive A: is found and a directory is displayed, check for the \Windows folder in the directory. If it is there, that is the System Drive. Skip to step 2.
+If the drive is not found or it doesn’t contain the \Windows folder, type dir b: and press Enter. Continue through the alphabet until the drive with the \Windows folder is found, but skip the X: drive. That will be the install files from the USB or DVD you are using. The most common location is the C: drive, so that example will be used in the rest of the article.
+Once it is found, type:bcdboot C:\Windows /S C:
+In this case, C is the drive where Windows folder was found. If the Windows folder is on a different drive, use that drive letter instead of “C” in the bcdboot command above.
+The message Boot files successfully created must be shown before you can continue.
+Type: diskpart and press Enter.
+Type: list disk and press Enter.
+Type: sel disk C and press Enter.
+In this case, C is the drive where Windows folder was found. If the Windows folder is on a different drive, use that drive letter instead of “C” in the sel disk command above.
+Type: list vol and press Enter.
+Type: sel vol C and press Enter.
+In this case, C is the drive where Windows folder was found. If the Windows folder is on a different drive, use that drive letter instead of “C” in the sel disk command above.
+Type: active and press Enter.
+You should get a confirmation that the volume has been successfully set as active. If you don’t get the confirmation, it means that either the disk is set to GPT (not MBR), or there is a problem with the disk. Make sure you are working with the right disk.
+Type: exit and press Enter.
+Reboot the device - you can do this quickly from the command prompt by typing: shutdown -f -r -t 00 and press Enter.
+If the type is GPT:
+From the Command Prompt, type dir a: and press Enter.
+If drive A: is found and a directory is displayed, check for the \Windows folder in the directory. If it is there, that is the System Drive. Skip to step 2.
+If the drive is not found or it doesn’t contain the \Windows folder, type dir b: and press Enter. Continue through the alphabet until the drive with the \Windows folder is found, but skip the X: drive. That will be the install files from the USB or DVD you are using. The most common location is the C: drive, so that example will be used in the rest of the article.
+Type: diskpart and press Enter.
+Type: list disk and press Enter
+Type: sel disk C and press Enter.
+In this case, C is the drive where Windows folder was found. If the Windows folder is on a different drive, use that drive letter instead of “C” in the sel disk command above.
+Type: list part and press Enter.
+Look for the partition labeled as System.
+Once it is found, assign the letter R to the partition. If the letter R is already taken, you can choose any unassigned letter. To assign the letter type: assign letter=r: and press Enter.
+Type: exit and press Enter.
+Return to the command prompt, type the following one line at a time, pressing Enter after each line:
+cd /d r:\EFI\Microsoft\Boot\
+ren BCD BCD.bak
+bcdboot c:\Windows /l en-us /s m: /f UEFI
+Note The /l en-us part of the command sets the Windows language to English. To set a different language, replace en-us with a different language code (such as de-de for German).
+Reboot the device - you can do this quickly from the command prompt by typing: shutdown -f -r -t 00 and pressing Enter.
