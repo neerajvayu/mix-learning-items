@@ -1,0 +1,14 @@
+There are two units of memory: - a) Bit or Binary and b) Byte.
+BIT- BIT is a short form of Binary Digit. One bit expresses a 1 or 0 in a binary digit.
+BYTE- A Byte consists of 8 Bits. A Byte can represent a single character, such as a letter, a digit or a punctuation mark.
+1 Character = 1byte = 8bits
+1 Kilobyte (KB)      = 1024bytes
+1Megabyte (MB)    = 1024kilobytes
+1 Gigabyte (GB)     = 1024megabytes
+1 Terabyte (TB)      = 1024 Gigabytes
+1 Petabyte (PB)       = 1024 Terabytes
+1 Exabyte (EB)        = 1024 Petabytes
+1 Zettabyte (ZB)      = 1024 Exabytes
+1 Yettabyte (YB)     = 1024 Zettabyte
+
+NOTE: - Each 1 and 0 is known as ‘binary digit’ or a ‘bit’.
