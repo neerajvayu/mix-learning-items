@@ -1,0 +1,43 @@
+CPU Counters
+Counter	Description
+%RDY	The percentage of time that the world or group is waiting a processor to be available to execute its workload.
+%USED	The percentage of CPU that is used by that world or group.
+GID	Group ID
+NWLD	The number of worlds in the group. When this number is greater than one,  the row can be expanded to get information on each world.
+Memory Counters
+Counter	Description
+%ACTV	Instantaneous view of the percentage of memory pages that have been used  by the VM in the previous seconds. Unlike TCHD which counts pages by  following working sets, %ACTV is a more frequently updated number that  is based on a sample of the entire memory pool.
+%ACTVS	Slow moving average of the %ACTV counter.
+%ACTVF	Fast moving average of the %ACTV counter.
+MCTL?	Set to "Y" when the balloon driver is active in the guest and "N" when not.
+MCTLSZ	This counter reports the amount of memory that the balloon driver is currently holding for use by other VMs.
+MEMSZ	The amount of memory (in MB) allocated to the VM at the time of its creation.
+NHN	The NUMA home node. This is the node on which the VM is booted.  Migrations that have occurred since the VM started running would result  in this VM running on another node(s).
+NMIG	The number of NUMA node migrations since the VM was booted. ESX Server's  scheduler should avoid NUMA migrations so if this number continues to  climb during normal operations some tuning of the VMs may be required.
+NRMEM	The amount of memory that exists on a remote NUMA node.
+NLMEM	The amount of memory that exists on the local NUMA node.
+N%L	The percentage of the VM's memory that exists on the local NUMA node. N%L = NLMEM / (NRMEM+NLMEM)
+OVHD	The amount of memory used by the VMkernel to maintain and execute the VM.
+SHRD	The amount of the VM's memory that is shared with other VMs.
+SHRDSVD	The amount of memory that was saved due to page sharing.  This number  may be less than or equal to SHRD.  As one VM must always claim the  single copy of a shared page, one VM with a shared page will not be able  to claim savings.
+SWR/s	The rate at which memory is being swapped in from disk.  High swap rates indicate a need for more memory in the cluster.
+SWW/s	The rate at which memory is being swapped out to disk.  High swap rates indicate a need for more memory in the cluster.
+TCHD	The amount of memory (in MB) that has been touched (recently used) by  the VM. In this case "recently" means within a minute or two.
+Storage Counters
+Counter	Description
+ABRTS/s	The rate at which disk operations are being aborted. Abort commands are  issued by the guest when the storage system has not responded within an  acceptable amount of time (as defined by the guest OS or application.)
+ACTV	The number of IO operations that are currently active. This represents  operations for which the host is processing and can serve as a snapshot  view of storage activity. When this number hovers near zero, the storage  system isn't being used. If is sustains non-zero numbers, the a  constant interaction with the strorage is occurring.
+DAVG/cmd	The average amount of time it takes a device (HBA, array, and everything in between) to service a single request.
+GAVG/cmd	The total latency seen from the VM when performing an IO operation. GAVG = DAVG+KAVG.
+KAVG/cmd	The average amount of time it takes ESX Server's VMkernel to service a  disk operation. Since this number represents time spent by the CPU to  manage IO and processors are orders of magnitude faster than disks, it  should be much, much less DAVG.
+QUED	The number of IO operations that require processing but have not yet be  addressed. Commands are queued and awaiting management by the kernel  when the driver's active buffer is full (see ACTV). Occasionally a queue  will form and result in a small, non-zero QUED number but any  significant (double-digit) average of queued commands means the storage  hardware is unable to keep up with the host's needs.
+READS/s	The number of disk reads per second.  READS/s + WRITES/s = IOPS.
+WRITES/s	The number of disk writes per second.  READS/s + WRITES/s = IOPS.
+
+
+Network Counters
+Counter	Description
+%DRPRX	The percentage of packets that were dropped that was supposed to be received.
+%DRPTX	The percentage of packets that were dropped for which transmission was attempted.
+MbRX/s	The megabits per second that are received at the network item.
+MbTX/s	The megabits per second that are transmitted from the network item
