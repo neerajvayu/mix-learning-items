@@ -1,0 +1,61 @@
+ESXi usefull commands
+
+Command	Description
+date	Date and time on this host
+esxcfg-info -a	Prints information about the service console, the VMkernel, various subsystems in the virtual network and storage resource hardware
+esxcfg-mpath -b	Multipathing configuration
+esxcfg-route -f V6 -l	Lists configured routes for the Vmkernel for both IPv4 and IPv6
+esxcfg-route -l	Lists configured routes for the Vmkernel for  IPv4
+esxcfg-swiscsi -q	To verify that the iSCSI initiator is running
+esxcfg-vmknic -l	Listing the VMK NICs
+esxcfg-vswitch -l	Listing the vSwitches
+ft-stats -lv	VMware FT statistics and debugging utility and listing the fault tolerance VMs
+esxcli fcoe adapter list	List FCOE-capable CNA devices.
+esxcli fcoe ni+A12c list	List FCOE-capable CNA devices
+esxcli iscsi logicalnetworkportal list	List Logical Network Portals for iSCSI Adapter
+esxcli iscsi networkportal list	List Network Portal for iSCSI Adapter
+esxcli iscsi physicalnetworkportal list	List Physical Network Portal for iSCSI Adapter
+esxcli network ip connection list	List active TCP/IP connections
+esxcli network ip neighbor list	List ARP table entries
+esxcli software acceptance get	verify that the acceptance level is set to VMwareCertified or VMwareAccepted
+esxcli software profile get  –rebooting-image	The output displays information for the ESXi image that will become active after the next reboot. If the pending-reboot image has not been created, the output returns nothing.
+esxcli software profile get	Display the installed image profile and host acceptance level.
+esxcli software vib get  –rebooting-image	The output displays information for the ESXi image that will become active after the next reboot. If the pending-reboot image has not been created, the output returns nothing.
+esxcli software vib get	Displays detailed information about one or more installed VIBs
+esxcli storage core adapter list	List all the SCSI Host Bus Adapters on the system.
+esxcli storage core adapter stats get	List the SCSI stats for the SCSI Host Bus Adapters in the system.
+esxcli storage core claimrule list –claimrule classall	List all the claimrules on the system.
+esxcli storage core device detached list	Lists all devices that were detached manually by changing their state on the system.
+esxcli storage core device list	For devices currently registered with the PSA, list the filters attached to them.
+esxcli storage core device partition list	For a given device list all of the partitions
+esxcli storage core device stats get	List the SCSI stats for SCSI Devices in the system.
+esxcli storage core device vaai status get	List VAAI properties for devices currently registered with the PSA.
+esxcli storage core path list	List all the SCSI paths on the system.
+esxcli storage core plugin registration list	List modules currently registered with PSA
+esxcli storage nfs list	List the NAS volumes currently known to the ESX host
+esxcli storage nmp device list	List the devices currently controlled by the VMware NMP Multipath Plugin and show the SATP and PSP information associated with that device.
+esxcli storage nmp path list	List the paths currently claimed by the VMware NMP Multipath Plugin and show the SATP and PSP information associated with that path.
+esxcli storage nmp satp rule list	List the claiming rules for Storage Array Type Plugins (SATP)
+esxcli storage vmfs snapshot list	List unresolved snapshots/replicas of VMFS volume
+esxcli system coredump partition get	Get one of the dump partition configured values. This command will print either the active dump partition or the configured dump partition depending on the flags passed.
+esxcli system coredump partition list	List all of the partitions on the system that have a partition type matching the VMware Core partition type. Also indicate which partition, if any, is being used as the system’s dump partition and which is configured to be used at next boot.
+esxcli system visorfs get	Obtain status information on the memory filesystem as a whole
+esxcli system visorfs ramdisk list	List the RAM disks used by the host
+esxcli system visorfs tardisk list	List the tardisks used by the host
+esxcli vm process list	List the virtual machines on this system. This command currently will only list running VMs on the system.
+ls -l /vmfs/volumes	List the files in all VMFS volumes attached to the ESXi host
+ls -la	List the folders and files in the root directory of the ESXi host
+lspci	List all PCI connected devices
+lsusb	List USB attached devices to the ESXi server
+net-dvs -l	list distributed switches
+nicinfo.sh	full report about networking information on the host
+partedUtil.sh	full report about the datastores attached to the host and their format
+ps -cPTgjst	Report about the processes and VMs running on the host along with the World ID and some info about the performance at the time of capturing the logs
+smbiosDump	The Bios information, it can provide info about the firmware of the bios and the hardware inventory on the host
+swfw.sh	The Software and firmware versions of the hardware components on the server
+uname -a	the FQDM name of the ESXi host
+vmkerrcode -l	A guide for the error codes related to the VMKernel based on decimal or hex value
+vmkload mod -v10 -l	List VMKernel modules (e.g. device drivers)
+vmkping -D -v	list the results of pinging to the VMK interefaces
+vmkvsitools lsof	List open file and also find the owner of the vmx file
+vmware -vl	ESXi version and build
