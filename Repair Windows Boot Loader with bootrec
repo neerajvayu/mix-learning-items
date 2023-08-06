@@ -1,0 +1,39 @@
+When you use the Recovery Environment (Windows RE) to troubleshoot startup issues, first try the Startup Repair option in the System Recovery Options dialog box. If this does not resolve the issue, or if you have to manually troubleshoot additional issues, use the Bootrec.exe tool. This article talks about how to use the Bootrec.exe tool in the Windows RE to troubleshoot and repair the following items in Windows Vista or Windows 7:
+
+A master boot record (MBR)
+A boot sector
+A Boot Configuration Data (BCD) store
+How to run the Bootrec.exe tool
+To run the Bootrec.exe tool, first start the Windows RE:
+Put the Windows Vista or Windows 7 media in the DVD drive, and then start the computer.
+Press a key when you are prompted.
+Select a language, a time, a currency, a keyboard, or an input method, and then click Next.
+Click Repair your computer.
+Select the operating system that you want to repair, and then click Next.
+In the System Recovery Options dialog box, click Command Prompt.
+Type Bootrec.exe, and then press Enter.
+Note To start the computer from the Windows Vista or Windows 7 DVD, the computer must be configured to start from the DVD drive. For information about how to do this, see the documentation that was included with the computer, or contact the computer manufacturer.
+
+Bootrec.exe options
+The Bootrec.exe tool supports the following options. Use the option that's appropriate for your situation.
+
+/FixMbr
+This option writes a Windows 7 or Windows Vista-compatible MBR to the system partition. It does not overwrite the existing partition table. Use this option when you must resolve MBR corruption issues, or when you have to remove nonstandard code from the MBR.
+/FixBoot
+This option writes a new boot sector to the system partition by using a boot sector that's compatible with Windows Vista or Windows 7. Use this option if one of the following conditions is true:
+The boot sector was replaced with a nonstandard Windows Vista or Windows 7 boot sector.
+The boot sector is damaged.
+An earlier Windows operating system was installed after Windows Vista or Windows 7 was installed. In this situation, the computer starts by using Windows NT Loader (NTLDR) instead of Windows Boot Manager (Bootmgr.exe).
+/ScanOs
+This option scans all disks for installations that are compatible with Windows Vista or Windows 7. It also displays the entries that are currently not in the BCD store. Use this option when there are Windows Vista or Windows 7 installations that the Boot Manager menu does not list.
+/RebuildBcd
+This option scans all disks for installations that are compatible with Windows Vista or Windows 7. Additionally, it lets you select the installations that you want to add to the BCD store. Use this option when you must completely rebuild the BCD store.
+Note Use the Bootrec.exe tool to troubleshoot a "Bootmgr Is Missing" error. If rebuilding the BCD store doesn't resolve the startup issue, you can export and delete the BCD store and then run this option again. By doing this, you make sure that the BCD store is completely rebuilt.
+
+To do this, type the following commands at the Windows RE command prompt:
+bcdedit /export C:\BCD_Backup
+c:
+cd boot
+attrib bcd -s -h -r
+ren c:\boot\bcd bcd.old
+bootrec /RebuildBcd
