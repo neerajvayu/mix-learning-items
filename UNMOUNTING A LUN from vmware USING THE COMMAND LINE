@@ -1,0 +1,233 @@
+Unmounting a LUN using the command line
+To unmount a LUN from an ESXi 5.x/6.0 host using the command line:
+If the LUN is an RDM, skip to step 4. Otherwise, to obtain a list of all datastores mounted to an ESXi host, run this command:
+
+# esxcli storage filesystem list
+
+You see output, which lists all VMFS datastores, similar to:
+
+Mount Point Volume Name UUID Mounted Type Size Free
+------------------------------------------------- ----------- ----------------------------------- ------- ------ ----------- -----------
+/vmfs/volumes/4de4cb24-4cff750f-85f5-0019b9f1ecf6 datastore1 4de4cb24-4cff750f-85f5-0019b9f1ecf6 true VMFS-5 140660178944 94577360896
+/vmfs/volumes/4c5fbff6-f4069088-af4f-0019b9f1ecf4 Storage2 4c5fbff6-f4069088-af4f-0019b9f1ecf4 true VMFS-3 146028888064 7968129024
+/vmfs/volumes/4c5fc023-ea0d4203-8517-0019b9f1ecf4 Storage4 4c5fc023-ea0d4203-8517-0019b9f1ecf4 true VMFS-3 146028888064 121057050624
+/vmfs/volumes/4e414917-a8d75514-6bae-0019b9f1ecf4 LUN01 4e414917-a8d75514-6bae-0019b9f1ecf4 true VMFS-5 146028888064 4266131456
+
+To find the unique identifier of the LUN housing the datastore to be removed, run this command:
+
+# esxcfg-scsidevs -m
+
+This command generates a list of VMFS datastore volumes and their related unique identifiers. Make a note of the unique identifier (NAA_ID) for the datastore you want to unmount as this will be used later on.
+
+For more information on the esxcfg-scsidevs command, see Identifying disks when working with VMware ESX/ESXi (1014953).
+
+Unmount the datastore by running this command:
+
+# esxcli storage filesystem unmount [-u UUID | -l label | -p path ]
+
+For example, use one of these commands to unmount the LUN01 datastore:
+
+# esxcli storage filesystem unmount -l LUN01
+# esxcli storage filesystem unmount -u 4e414917-a8d75514-6bae-0019b9f1ecf4
+# esxcli storage filesystem unmount -p /vmfs/volumes/4e414917-a8d75514-6bae-0019b9f1ecf4
+
+Note: If the VMFS filesystem you are attempting to unmount has active I/O or has not fulfilled the prerequisites to unmount the VMFS datastore, you see an error in the VMkernel logs similar to:
+
+WARNING: VC: 637: unmounting opened volume ('4e414917-a8d75514-6bae-0019b9f1ecf4' 'LUN01') is not allowed.
+VC: 802: Unmount VMFS volume f530 28 2 4e414917a8d7551419006bae f4ecf19b 4 1 0 0 0 0 0 : Busy
+
+To verify that the datastore is unmounted, run this command:
+
+# esxcli storage filesystem list
+
+You see output similar to:
+
+Mount Point Volume Name UUID Mounted Type Size Free
+------------------------------------------------- ----------- ----------------------------------- ------- ------ ----------- -----------
+/vmfs/volumes/4de4cb24-4cff750f-85f5-0019b9f1ecf6 datastore1 4de4cb24-4cff750f-85f5-0019b9f1ecf6 true VMFS-5 140660178944 94577360896
+/vmfs/volumes/4c5fbff6-f4069088-af4f-0019b9f1ecf4 Storage2 4c5fbff6-f4069088-af4f-0019b9f1ecf4 true VMFS-3 146028888064 7968129024
+/vmfs/volumes/4c5fc023-ea0d4203-8517-0019b9f1ecf4 Storage4 4c5fc023-ea0d4203-8517-0019b9f1ecf4 true VMFS-3 146028888064 121057050624
+LUN01 4e414917-a8d75514-6bae-0019b9f1ecf4 false VMFS-unknown version 0 0
+
+The Mounted field is set to false, the Type field is set to VMFS-unknown version, and that no Mount Point exists.
+
+Note: The unmounted state of the VMFS datastore persists across reboots. This is the default behavior. If you need to unmount a datastore temporarily, you can do so by appending the --no-persist flag to the unmount command.
+
+To detach the device/LUN, run this command:
+
+# esxcli storage core device set --state=off -d NAA_ID
+
+To verify that the device is offline, run this command:
+
+# esxcli storage core device list -d NAA_ID
+
+You see output, which shows that the Status of the disk is off, similar to:
+
+naa.60a98000572d54724a34655733506751
+Display Name: NETAPP Fibre Channel Disk (naa.60a98000572d54724a34655733506751)
+Has Settable Display Name: true
+Size: 1048593
+Device Type: Direct-Access
+Multipath Plugin: NMP
+Devfs Path: /vmfs/devices/disks/naa.60a98000572d54724a34655733506751
+Vendor: NETAPP
+Model: LUN
+Revision: 7330
+SCSI Level: 4
+Is Pseudo: false
+Status: off
+Is RDM Capable: true
+Is Local: false
+Is Removable: false
+Is SSD: false
+Is Offline: false
+Is Perennially Reserved: false
+Thin Provisioning Status: yes
+Attached Filters:
+VAAI Status: unknown
+Other UIDs: vml.020000000060a98000572d54724a346557335067514c554e202020
+
+Running the partedUtil getptbl command on the device shows that the device is not found.
+
+For example:
+
+# partedUtil getptbl /vmfs/devices/disks/naa.60a98000572d54724a34655733506751
+
+Error: Could not stat device /vmfs/devices/disks/naa.60a98000572d54724a34655733506751 - No such file or directory.
+Unable to get device /vmfs/devices/disks/naa.60a98000572d54724a34655733506751
+
+If the device is to be permanently decommissioned, it is now possible to unpresent the LUN from the SAN. For more information, contact your storage team, storage administrator, or storage array vendor.
+To rescan all devices on the ESXi host, run this command:
+
+# esxcli storage core adapter rescan [ -A vmhba# | --all ]
+
+The devices are automatically removed from the Storage Adapters.
+
+Notes:
+A rescan must be run on all hosts that had visibility to the removed LUN.
+When the device is detached, it stays in an unmounted state even if the device is re-presented (that is, the detached state is persistent). To bring the device back online, the device must be attached. To do this via the command line, run this command:
+
+# esxcli storage core device set --state=on -d NAA_ID
+
+If the device is to be permanently decommissioned from an ESXi host, (that is, the LUN has been or will be destroyed), remove the NAA entries from the host configuration by running these commands:
+
+To list the permanently detached devices:
+
+# esxcli storage core device detached list
+
+You see output similar to:
+
+Device UID State
+---------------------------- -----
+naa.50060160c46036df50060160c46036df off
+naa.6006016094602800c8e3e1c5d3c8e011 off
+
+To permanently remove the device configuration information from the system:
+
+# esxcli storage core device detached remove -d NAA_ID
+
+For example:
+
+# esxcli storage core device detached remove -d naa.50060160c46036df50060160c46036df
+
+The reference to the device configuration is permanently removed from the ESXi host's configuration.
+
+Note: If the device is detached but still presented (step 7 was skipped), the preceding command fails to permanently remove the device from the system, and the device is automatically re-attached. You must complete step 7 for the device to be permanently removed.
+Automating detaching datastores using PowerCLI and the vSphere SDK for Perl
+It is possible to automate the process of detaching datastores from multiple hosts using PowerCLI scripts.
+
+Using the PowerCLI
+
+To detach a storage device using PowerCLI:
+Review the VMware Contributed Sample Code disclaimer.
+Download the PowerCLI script available at Automating Datastore/Storage Device Detachment in vSphere 5.
+
+Note: This PowerCLI script is provided as-is and is accordingly community supported. If you experience issues with this PowerCLI script, seek assistance from the VMware Communities forums.
+
+Import the script using this command:
+
+Import-Module path_to_script
+
+Ensure that you have already unmounted the target datastore. For more information, see the Unmount VMFS or NFS Datastores section in the vSphere 5.0 Storage Guide.
+List all datastores and their attached hosts by running this command:
+
+Get-Datastore | Get-DatastoreMountInfo | Sort Datastore, VMHost | FT –AutoSize
+
+You see output similar to:
+
+Datastore VMHost Lun Mounted State
+--------- ------ --- ------- -----
+IX2ISCSI01 esx01.vmw.local naa.5000144f52145699 False Attached
+IX2ISCSI01 esx02.vmw.local naa.5000144f52145699 False Attached
+IX2ISCSI01 esx03.vmw.local naa.5000144f52145699 False Attached
+LocalDatastore esx01.vmw.local mpx.vmhba1:C0:T0:L0 True Attached
+LocalDatastore esx02.vmw.local mpx.vmhba1:C0:T0:L0 True Attached
+esx04-Internal-150GB esx04.vmw.local t10.ATA_____GB0160EAPRR_____________________________WCAT25563003________ True Attached
+esx04-Internal-500GB esx04.vmw.local t10.ATA_____WDC_WD5000AAKS2D00V1A0________________________WD2DWMAWF0069467 True Attached
+esx03-Internal-150GB esx03.vmw.local t10.ATA_____GB0160EAPRR_____________________________WCAT25704089________ True Attached
+esx03-Internal-500GB esx03.vmw.local t10.ATA_____WDC_WD5000AAKS2D00YGA0________________________WD2DWCAS85034601 True Attached
+
+Select the appropriate datastore and record the name beneath the Datastore column, and confirm that the Mounted column contains the value False for all hosts.
+Detach the devices from all hosts by running this command:
+
+Get-Datastore datastore_name| Detach-Datastore
+
+Where datastore_name is the name of the datastore recorded in step 3.
+
+You see output similar to:
+
+Detaching LUN naa.5000144f52145699 from host esx01.vmw.local...
+Detaching LUN naa.5000144f52145699 from host esx02.vmw.local...
+Detaching LUN naa.5000144f52145699 from host esx03.vmw.local...
+Note: The powercli command Get-Datastore datastore_name| Detach-Datastore is detaching only the head extent (first extent) of the datastore which is made up of multiple extents. This step does not work for the datastore which has multiextents.
+
+Using the vSphere SDK for Perl
+
+To detach a storage device using Perl:
+Review the VMware Contributed Sample Code disclaimer.
+Deploy the community-supported Perl script available in the VMware vSphere Blog, Automating Datastore/Storage Device Detachment in vSphere 5.
+
+Caution: Before proceeding, ensure that you have already unmounted the target datastore. For more information, see the Unmount VMFS or NFS Datastores section in the vSphere 5.0 Storage Guide.
+
+List all datastores and their attached hosts by running this command:
+
+./lunManagement.pl --server vcenter_ip --username user --operation list
+
+Where vcenter_ip is the IP address of the vCenter Server managing your hosts and user is a user with administrative privileges.
+
+You are prompted for a password for the user account used in step 3. If the correct password is entered, the script generates output similar to:
+
+Datastore: esx01-local-storage-1 LUN: mpx.vmhba1:C0:T0:L0
+esx01.vmw.local MOUNTED ATTACHED
+Datastore: esx02-local-storage-1 LUN: mpx.vmhba1:C0:T0:L0
+esx02.vmw.local MOUNTED ATTACHED
+Datastore: iSCSI-1 LUN: naa.600144f0a33bc20000004e9772510001
+esx01.vmw.local UNMOUNTED ATTACHED
+esx02.vmw.local UNMOUNTED ATTACHED
+Datastore: iSCSI-2 LUN: naa.600144f0a33bc20000004e9772ee0002
+esx01.vmw.local MOUNTED ATTACHED
+esx02.vmw.local MOUNTED ATTACHED
+Datastore: iSCSI-3 LUN: naa.600144f0a33bc20000004e9773560003
+esx01.vmw.local MOUNTED ATTACHED
+esx02.vmw.local MOUNTED ATTACHED
+Datastore: iSCSI-4 LUN: naa.600144f0a33bc20000004e9773560004
+esx01.vmw.local MOUNTED ATTACHED
+esx02.vmw.local MOUNTED ATTACHED
+Datastore: iSCSI-5 LUN: naa.600144f0a33bc20000004e9773570005
+esx01.vmw.local MOUNTED ATTACHED
+esx02.vmw.local MOUNTED ATTACHED
+
+Confirm that the datastore that you want to detach has been unmounted by checking the UNMOUNTED keyword beneath the applicable datastore name and NAA value.
+Detach the device across multiple hosts by running this command:
+
+./lunManagement.pl --server vcenter_ip --username user --operation detach --datastore datastore
+
+Where vcenter_ip is the IP address for the vCenter Server, user is a user with administrative privileges, and datastore is the name of the datastore identified in step 4.
+
+You are prompted for a password and confirmation that you want to do the operation. After providing the correct password and acknowledging the warning, the tool generates output similar to:
+
+Detaching LUN "0200000000600144f0a33bc20000004e9772510001434f4d535441" from Host "esx01.vmw.local" ...
+Successfully detached LUN!
+Detaching LUN "0200000000600144f0a33bc20000004e9772510001434f4d535441" from Host "esx02.vmw.local" ...
+Successfully detached LUN!
+Note: After detaching the LUN, it can be unpresented from the storage. However, if you run the esxcli storage core device detached remove -d NAA_ID command to permanently decommission the LUN from the ESXI host before unpresenting the LUN from the storage, the LUN gets reattached to the host and must be detached again.
