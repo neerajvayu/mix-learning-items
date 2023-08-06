@@ -1,0 +1,19 @@
+To determine the VMware Tool version:
+Windows:  
+From the Console or an remote desktop session, open VMware Tools from the Task Bar and click About. 
+From the directory located at C:\Program Files\VMware\VMware Tools\, run the command:
+
+VMwareToolboxCmd.exe -v
+ Linux:
+From the Console, run the vmware-toolbox command from terminal and click About.
+To determine the vmware-tools version, run the command:
+
+vmware-toolbox-cmd -v
+ 
+Note: The Tools version can also be accessed from the ESXi/ESX command line by running the command:
+ 
+grep toolbox /vmfs/volumes/datastore/vm_name/vmware.log
+ 
+ An alternative command to verify the tools version on an ESX/ESXi host is:
+ 
+grep build- /vmfs/volumes/datastore/vm_name/vmware.log
