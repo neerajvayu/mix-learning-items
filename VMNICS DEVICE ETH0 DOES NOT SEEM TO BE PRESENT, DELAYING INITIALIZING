@@ -1,0 +1,12 @@
+VMNICS DEVICE ETH0 DOES NOT SEEM TO BE PRESENT, DELAYING INITIALIZING
+https://communities.vmware.com/thread/55651?start=0&tstart=0
+
+
+Install vmware tool , if updated install it again
+
+service network stop
+rm /etc/udev/rules.d/70-persistent-net.rules
+
+Then remove the HWADDRESS from the ifcfg-ethX file all together
+start_udev
+service network start
