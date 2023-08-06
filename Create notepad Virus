@@ -1,0 +1,6 @@
+Create a batch file with .BAT extention and put below lines and save it
+
+@ECHO off
+:top
+START %SystemRoot%\system32\notepad.exe
+GOTO top
