@@ -1,0 +1,20 @@
+Each iSCSI disk has a unique LUN ID.
+To View the LUN ID of  a disk, you can use the diskpart command.
+Here are the steps to view the LUN ID of a disk:
+
+To View the disks:
+
+list disk
+
+    Select a disk
+
+select disk
+
+
+    View the LUN ID of the disk
+
+detail disk
+
+
+You can use some wmi command also to get the details
+Get-WmiObject Win32_DiskDrive | Select Name, SCSIBus,SCSILun
