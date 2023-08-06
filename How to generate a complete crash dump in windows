@@ -1,0 +1,26 @@
+How to generate a complete crash dump file or a kernel crash dump file by using an NMI on a Windows-based system
+ How to generate a memory dump file when a server stops responding (hangs)
+This method does not work for all systems. For example, Hewlett-Packard (HP) BladeSystem servers from the Hewlett-Packard Development Company are managed through a browser-based graphical user interface (GUI). A keyboard is not attached to the HP BladeSystem server. Therefore, you cannot use this keyboard shortcut to generate a crash dump file. In these cases, you must generate a complete crash dump file or a kernel crash dump file by using the Non-Maskable Interrupt (NMI) switch that causes an NMI on the system processor. This article describes how to generate a complete crash dump file or a kernel crash dump file by using an NMI switch.
+Before you continue, look in the hardware BIOS reference manual or contact your hardware vendor to determine whether the server is equipped with an NMI switch. To enable complete memory dump files on your server, follow these steps:
+Set up the page file to generate a complete memory dump file.T
+Right-click My Computer, and then click Properties.
+Click the Advanced tab.
+Under Startup and Recovery, click Settings.
+Make sure that Kernel memory dump or Complete memory dump is selected under Writing Debugging Information.
+You can change the location of the memory dump file to a different local partition if you do not have sufficient room on the partition where the operating system is installed.
+"Kernel Memory Dump" is displayed in Startup and Recovery, but a complete memory dump is performed in Windows 2000 or in Windows Server 2003
+In Registry Editor, locate the following registry subkey:
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CrashControl
+Right-click CrashControl, point to New, and then click DWORD Value.
+Type NMICrashDump, and then press ENTER.
+Right-click NMICrashDump, and then click Modify.
+In the Value data box, type 1, and then click OK.
+Restart the computer.
+Hardware vendors, such as HP, IBM, and Dell, may provide an Automatic System Recovery (ASR) feature. You should disable this feature during troubleshooting. For example, if HP and Compaq's ASR feature is enabled in the BIOS, disable this feature while you are troubleshooting to generate a complete memory.dmp file. For the exact steps, contact your hardware vendor.
+Enable the NMI switch in the BIOS or by using the Integrated Lights Out (iLO) Web interface.
+
+Note For the exact steps, see the BIOS reference manual or contact your hardware vendor.
+Test this method on the server by using the NMI switch to generate a dump file. You will see a STOP 0x00000080 hardware malfunction.
+Wait for the problem to recur.
+For information about how to contact your hardware vendor, visit the following Microsoft Web site:
+http://support.microsoft.com/gp/vendors
