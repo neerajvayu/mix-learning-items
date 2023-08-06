@@ -1,0 +1,42 @@
+
+August 23, 2016
+VMWARE NETWORK ADAPTERS
+Network adapter choices depend on the version number and the guest operating system running on the virtual machine. This article discusses the different network adapter options available for virtual machines.
+There are three types of networking available to virtual machines. Each type has its own uses, behaviors and features:
+Bridged networking
+Used in environments where virtual machines provide services or participate in a real network.
+Connects virtual machines to the Local Area Network (LAN) of their host machine, whether wired or wireless, and allows them to connect to any other host or virtual machines (if they are also bridged) on the network.
+Connects the virtual network adapter in a virtual machine to the physical Ethernet adapter in its host machine.
+You can establish additional virtual bridges to use in custom configurations that require connections to more than one physical Ethernet adapter on the host computer.
+The default network adapter interface is vmnet0.
+Host-only networking
+Used in isolated test environments where virtual machines do not need to communicate with other environments.
+Connects virtual machines to a private LAN shared only by their host machine and any other virtual machines also using host-only networking.
+Other host machines on the host LAN cannot communicate with the virtual machines.
+The default network adapter interface is vmnet1.
+Network Address Translation (NAT) networking
+Used in environments where virtual machines do not provide services but still need to access a network.
+Connects virtual machines to an external network using the host machines IP address for external communication.
+Connects virtual machines to the Internet through their host machines dial-up connection, Ethernet adapter or wireless Ethernet adapter.
+Connects virtual machines to a non-Ethernet network, such as Token Ring or ATM.
+Establishes a private LAN shared only by your host machine and any other virtual machines also using NAT networking.
+Other host machines on the host LAN communicate with the virtual machines, however external host machines cannot initiate communication with virtual machines unless NAT port forwarding is also in use. NAT port forwarding causes network traffic destined for a port on a host machine to be forwarded to a specific port on a virtual machine.
+The default network adapter interface is vmnet8.
+ 
+Available Network Adapters
+Only those network adapters that are appropriate for the virtual machine you are creating are available configuration options in the Choose Networks window.
+Vlance: This is an emulated version of the AMD 79C970 PCnet32- LANCE NIC, and it is an older 10 Mbps NIC with drivers available in most 32-bit guest operating systems except Windows Vista and later. A virtual machine configured with this network adapter can use its network immediately.
+VMXNET: The VMXNET virtual network adapter has no physical counterpart. VMXNET is optimized for performance in a virtual machine. Because operating system vendors do not provide built-in drivers for this card, you must install VMware Tools to have a driver for the VMXNET network adapter available.
+Flexible: The Flexible network adapter identifies itself as a Vlance adapter when a virtual machine boots, but initializes itself and functions as either a Vlance or a VMXNET adapter, depending on which driver initializes it. With VMware Tools installed, the VMXNET driver changes the Vlance adapter to the higher performance VMXNET adapter.
+E1000: An emulated version of the Intel 82545EM Gigabit Ethernet NIC. A driver for this NIC is not included with all guest operating systems. Typically Linux versions 2.4.19 and later, Windows XP Professional x64 Edition and later, and Windows Server 2003 (32-bit) and later include the E1000 driver.
+
+Note: E1000 does not support jumbo frames prior to ESXi/ESX 4.1.
+E1000e: This feature emulates a newer model of Intel Gigabit NIC (number 82574) in the virtual hardware. This is known as the "e1000e" vNIC. e1000e is available only on hardware version 8 (and newer) virtual machines in vSphere 5. It is the default vNIC for Windows 8 and newer (Windows) guest operating systems. For Linux guests, e1000e is not available from the UI (e1000, flexible vmxnet, enhanced vmxnet, and vmxnet3 are available for Linux).
+VMXNET 2 (Enhanced): The VMXNET 2 adapter is based on the VMXNET adapter but provides some high-performance features commonly used on modern networks, such as jumbo frames and hardware offloads. This virtual network adapter is available only for some guest operating systems on ESXi/ESX 3.5 and later. Because operating system vendors do not provide built-in drivers for this card, you must install VMware Tools to have a driver for the VMXNET 2 network adapter available.
+
+VMXNET 2 is supported only for a limited set of guest operating systems.
+
+Notes:
+You can use enhanced VMXNET adapters with other versions of the Microsoft Windows 2003 operating system, but a workaround is required to enable the option in the VMware Infrastructure (VI) Client or vSphere Client.
+Jumbo frames are not supported in the Solaris Guest OS for VMXNET 2.
+VMXNET 3: The VMXNET 3 adapter is the next generation of a paravirtualized NIC designed for performance, and is not related to VMXNET or VMXNET 2. It offers all the features available in VMXNET 2, and adds several new features like multiqueue support (also known as Receive Side Scaling in Windows), IPv6 offloads, and MSI/MSI-X interrupt delivery.
