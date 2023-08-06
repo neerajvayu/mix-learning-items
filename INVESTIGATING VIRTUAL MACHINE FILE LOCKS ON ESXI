@@ -1,0 +1,227 @@
+Details
+
+Powering on a virtual machine fails.
+Unable to power on a virtual machine.
+Adding an existing virtual machine disk (VMDK) to a virtual machine that is already powered on fails.
+You see the error:
+
+Failed to add disk scsi0:1. Failed to power on scsi0:1
+
+When powering on the virtual machine, you see one of these errors:
+
+Unable to open Swap File
+Unable to access a file since it is locked
+Unable to access a file since it is locked
+Unable to access Virtual machine configuration
+In the /var/log/vmkernel log file, you see entries similar to:
+
+WARNING: World: VM xxxx: xxx: Failed to open swap file : Lock was not free
+WARNING: World: VM xxxx: xxx: Failed to initialize swap file
+
+When opening a console to the virtual machine, you may receive the error:
+
+Error connecting to .vmx because the VMX is not started
+
+Powering on the virtual machine results in the power on task remaining at 95% indefinitely.
+Cannot power on the virtual machine after deploying it from a template.
+The virtual machine reports conflicting power states between vCenter Server and the ESXi/ESX host console.
+Attempting to view or open the .vmx file using a text editor (for example, cat or vi), reports an error similar to:
+
+cat: can't open '[name of vm].vmx': Invalid argument
+Solution
+The purpose of file locking
+
+
+To prevent concurrent changes to critical virtual machine files and file systems, ESXi/ESX hosts establish locks on these files. In certain circumstances, these locks may not be released when the virtual machine is powered off. The files cannot be accessed by the servers while locked, and the virtual machine is unable to power on.
+
+These virtual machine files are locked during runtime:
+VMNAME.vswp
+DISKNAME-flat.vmdk
+DISKNAME-ITERATION-delta.vmdk
+VMNAME.vmx
+VMNAME.vmxf
+vmware.log
+Initial quick test
+To run your critical virtual machine running:
+Migrate the virtual machine to the host and attempt to power on.
+If unsuccessful, continue to attempt a power on of the virtual machine on other hosts in the cluster.
+
+When you hit the host holding the file locks, the virtual machine should power on as the file locks in place are valid.
+
+If you still cannot power on the virtual machine continue with the steps below to investigate in more detail.
+To identify and release the lock on the files, perform these relevant steps for your version of ESXi.
+ESXi troubleshooting steps
+Identifying the locked file
+ 
+To identify the locked file, attempt to power on the virtual machine. During the power on process, an error may display or be written to the virtual machine's logs. The error and the log entry identify the virtual machine and files:
+Where applicable, open and connect the vSphere or VMware Infrastructure (VI) Client to the respective ESXi host, VirtualCenter Server, or the vCenter Server host name or IP address.
+Locate the affected virtual machine, and attempt to power it on.
+Open a remote console window for the virtual machine.
+If the virtual machine is unable to power on, an error on the remote console screen displays with the name of the affected file.
+
+Note: If an error does not display, proceed to these steps to review the vmware.log file of the virtual machine:
+
+Log in as root to the ESXi host using an SSH client.
+Confirm that the virtual machine is registered on the server and obtain the full path to the virtual machine by running this command:
+
+# vim-cmd vmsvc/getallvms
+
+The output returns a list of the virtual machines registered to the ESXi host. Each line contains the datastore and location within virtual machine's .vmx file.
+
+You see output similar to:
+
+[datastore] VMDIR/VMNAME.vmx
+
+Verify that the affected virtual machine appears in this list. If it is not listed, the virtual machine is not registered on this ESXi host. The host on which the virtual machine is registered typically holds the lock. Ensure that you are connected to the proper host before proceeding.
+
+Move to the virtual machine's directory:
+
+# cd /vmfs/volumes/datastore/VMDIR
+
+Use a text viewer to read the contents of the vmware.log file. At the end of the file, look for error messages that identify the affected file.
+Locating the lock and removing it
+ 
+A virtual machine can be moved between hosts, because of this the host where the virtual machine is currently registered may not be the host maintaining the file lock. The lock must be released by the ESX/ESXi host that owns the lock. This host is identified by the MAC address of the primary management vmkernel interface.
+
+Note: Locked files can also be caused by backup programs keeping a lock on the file while backing up the virtual machine. If there are any issues with the backup, it may result in the lock not being removed correctly. In some cases, you may need to disable your backup application or reboot the backup server to clear the hung backup.
+
+This lock can be maintained by the VMkernel for any hosts connected to the same storage.
+
+Note: ESXi does not use a separate Service Console Operating System. This reduces the amount of lock troubleshooting to just the VMkernel.
+
+For example, Console OS troubleshooting methods such as using the lsof utility are not applicable to ESXi hosts.
+
+Start by identifying the server whose VMkernel may be locking the file.
+
+To identify the server:
+Report the MAC address of the lock holder by running this command (except on an NFS volume):
+
+# vmkfstools -D /vmfs/volumes/UUID/VMDIR/LOCKEDFILE.xxx
+
+Note: Run this command on all commonly locked virtual machine files (as listed at the start of the Solution section) to ensure that all locked files are identified.
+
+For servers prior to ESXi 4.1, this command writes the output of the command above to the system's logs. From ESXi 4.1, the output is also displayed on-screen. Included in this output is the MAC address of any host that is locking the .vmdk file. To locate this information, check /var/log/messages.
+
+Look for lines similar to:
+
+Hostname vmkernel: 17:00:38:46.977 cpu1:1033)Lock [type 10c00001 offset 13058048 v 20, hb offset 3499520
+Hostname vmkernel: gen 532, mode 1, owner xxxxxxxx-xxxxxxxx-xxxx- xxxxxxxxxxxx mtime xxxxxxxxxx]
+Hostname vmkernel: 17:00:38:46.977 cpu1:1033)Addr <4 136="" 2="">, gen 19, links 1, type reg, flags 0x0, uid 0, gid 0, mode 600
+Hostname vmkernel: 17:00:38:46.977 cpu1:1033)len 297795584, nb 142 tbz 0, zla 1, bs 2097152
+Hostname vmkernel: 17:00:38:46.977 cpu1:1033)FS3: 132:
+
+The second line (in bold) displays the MAC address after the word owner. In this example, the MAC address of the management vmkernel interface of the offending ESXi host is xx:xx:xx:xx:xx:xx. After logging in to the server, the process maintaining the lock can be analyzed.
+
+In versions of ESXi equal or greater than 4.0 U3 and 4.1 U1, there is a new field which can identify a read only or multi writer lock owner.
+
+You see an output similar to:
+
+[root@test-esx1 testvm]# vmkfstools -D test-000008-delta.vmdk
+Lock [type 10c00001 offset 45842432 v 33232, hb offset 4116480
+gen 2397, mode 2, owner 00000000-00000000-0000-000000000000mtime 5436998]<----- span="">---------MAC address of lock owner
+RO Owner[0] HB offset 3293184 xxxxxxxx-xxxxxxxx-xxx-xxxxxxxxxxxx <----------------------- span="">-------MAC address of read-only lock owner
+Addr <4 160="" 80="">, gen 33179, links 1, type reg, flags 0, uid 0, gid 0, mode 100600
+len 738242560, nb 353 tbz 0, cow 0, zla 3, bs 2097152
+
+If the command vmkfstools -D test-000008-delta.vmdk does not return a a valid MAC address in the top field (returns all zeros ). Review the field below it, the RO Owner line below it to see which MAC address owns the read only/multi writer lock on the file. In the preceding example, the offending MAC address is: xx:xx:xx:xx:xx:xx.
+In some cases, it is possible that it is a Service Console-based lock, an NFS lock or a lock generated by another system or product that can use or read VMFS file systems. The file is locked by a VMkernel child or cartel world and the offending host running the process/world must be rebooted to clear it.
+After you have identified the host or backup tool (machine that owns the MAC) locking the file, power it off or stop the responsible service, then restart the management agents on the host running the virtual machine to release the lock.
+
+To determine if the MAC address corresponds to the host that you are currently logged in to, see Identifying the ESX Service Console MAC address (1001167). If it does not, you must establish a console or SSH connection to each host that has access to this virtual machine's files.
+When you have identified the host holding the lock, unregister the virtual machine from the host.
+
+Note: If you cannot find the virtual machine in the host inventory in vCenter Server, open a vSphere or VI Client connection direct to the ESXi host. Check for any entry in the inventory labelled Unknown VM. If found, remove the unknown virtual machine from the inventory.
+
+When successfully removed from the inventory, register the virtual machine on the host holding the lock and attempting to power it on. You may have to set DRS to manual ensuring the virtual machine powers up on the correct host.
+
+If the virtual machine still does not power on, complete these procedures while logged into the offending host.
+
+Note: If you have already identified a VMkernel lock on the file, skip the rest of the section and go to the Further troubleshooting steps section in this article.
+
+Check if the virtual machine still has a World ID assigned to it:
+
+For ESXi 4.x, run these commands on all ESXi hosts:
+
+# cd /tmp
+# vm-support -x
+
+You see output similar to:
+
+Available worlds to debug:
+wid=world_id name_of_VM_with_locked_file
+
+On the ESXi 4.x host where the virtual machine is still running, kill the virtual machine. This releases the lock on the file. To kill the virtual machine, run this command:
+
+# vm-support -X world_id
+
+Where the world_id is the World ID of the virtual machine with the locked file.
+
+Note: This command takes 5-10 minutes to complete. Answer No to Can I include a screenshot of the VM, and answer Yes to all subsequent questions.
+
+After stopping the process, you can power on the virtual machine or access the file/resource.
+
+For ESXi 5.x and later, the esxcli command-line utility can be used locally or remotely to display a list of the virtual machines which are currently running on the host.
+
+Obtain a list of all running virtual machines, identified by their World ID, Cartel ID, display name, and path to the .vmx configuration file using this command:
+
+# esxcli vm process list
+
+You see output similar to:
+
+VirtualMachineName
+World ID: 1268395
+Process ID: 0
+VMX Cartel ID: 1264298
+UUID: ab cd ef ...
+Display Name: VirtualMachineName
+Config File: /path/VirtualMachineName.vmx
+
+Two worlds are listed. The first world number (in this example, 1268395) is the Virtual Machine Monitor (VMM) for vCPU 0. The second world number (in this example, 1264298) is the virtual machine Cartel ID.
+
+On the ESXi 5.x and later host where the virtual machine is still running, kill the virtual machine. This releases the lock on the file. To kill the virtual machine, run this command:
+
+# esxcli vm process kill --type=soft --world-id=1268395
+
+In ESXi 4.1/5.x/6.x, to find the owner of the locked file of a virtual machine, run this command:
+
+# vmkvsitools lsof | grep Virtual_Machine_Name
+
+You see output similar to:
+
+11773 vmx 12 46 /vmfs/volumes/Datastore_Name/VirtualMachineName/ VirtualMachineName-flat.vmdk
+
+You can then run this command to obtain the PID of the process for the virtual machine:
+
+ps | grep Virtual_Machine_name
+
+You can kill the process with this command:
+
+kill -9 PID
+
+To generate a core dump after killing the running virtual machine (but hung and nonresponsive), use the command kill -6 PID or kill -11 PID.
+
+Note: In ESXi 4.1 ESXi 5.x and ESXi 6.x, you can use the k command in esxtop to send a signal to and kill a running virtual machine process. On the ESXi console, enter Tech Support mode and log in as root.
+Run the esxtop utility using the esxtop command.
+Press c to switch to the CPU resource utilization screen.
+Press Shift+f to display the list of fields.
+Press c to add the column for the Leader World ID.
+Identify the target virtual machine by its Name and Leader World ID (LWID).
+Press k.
+In the World to kill prompt, type in the Leader World ID from step 6 and press Enter.
+Wait 30 seconds and validate that the process is no longer listed.
+Determining if the file is being used by a running virtual machine
+
+If the file is being accessed by a running virtual machine, the lock cannot be usurped or removed. It is possible that the host holding the lock is running the virtual machine and has become unresponsive, or another running virtual machine has the disk incorrectly added to its configuration prior to power-on attempts.
+
+To determine if the virtual machine processes are running:
+Determine if the virtual machine is registered on the host, run this command as the root user:
+
+# vim-cmd vmsvc/getallvms
+
+Note: The output lists the vmid for each virtual machine registered. Record this information as it is required in the remainder of this process on the ESXi server.
+
+Assess the virtual machine's current state on the host, run this command:
+
+# vim-cmd vmsvc/power.getstate vmid
+
+To stop the virtual machine process, see Powering off an unresponsive virtual machine on an ESX host (1004340). 
