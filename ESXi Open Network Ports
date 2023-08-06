@@ -1,0 +1,28 @@
+A limited number of network ports are open on ESXi. The most
+important ports and services are the following:
+•
+80 — This port serves a reverse proxy that is open only to
+display a static Web page that you see when browsing to the
+server. Otherwise, this port redirects all traffic to port 443 to
+provide SSL-encrypted communications to the ESXi host.
+•
+443 (reverse proxy) — This port also acts as a reverse proxy to
+a number of services to provide SSL-encrypted communica
+-
+tion to these services. The services include the
+VMware Virtual
+Infrastructure API (VI API)
+, which provides access to the RCLIs,
+VI Client, VirtualCenter Server, and the SDK.
+•
+427 (service location protocol) — This port provides access for
+the service location protocol, a generic protocol to search for
+the VI API.
+•
+5989 — This port is open for the CIM server, which is an inter
+-
+face for Third-party management tools.
+•
+902 — This port is open to support the older VIM API, specifi
+-
+cally the older versions of the VI Client and VirtualCenter.
