@@ -1,0 +1,18 @@
+From the vSphere Client, this information is visible in the Properties window of the datastore.
+
+From the ESXi host, run this command:
+
+# esxcli storage vmfs extent list
+
+You see output similar to:
+
+Volume Name VMFS UUID Extent Number Device Name Partition
+----------- ----------------------------------- ------------- ------------------------------------ ---------
+datastore1 4de4cb24-4cff750f-85f5-0019b9f1ecf6 0 naa.6001c230d8abfe000ff76c198ddbc13e 3
+Storage2 4c5fbff6-f4069088-af4f-0019b9f1ecf4 0 naa.6001c230d8abfe000ff76c2e7384fc9a 1
+Storage4 4c5fc023-ea0d4203-8517-0019b9f1ecf4 0 naa.6001c230d8abfe000ff76c51486715db 1
+LUN01 4e414917-a8d75514-6bae-0019b9f1ecf4 0 naa.60a98000572d54724a34655733506751 1
+
+Make a note of the NAA ID of the datastore to use this information later in this procedure.
+
+Note: Alternatively, you can run the esxcli storage filesystem list command, which lists all file systems recognized by the ESXi host.
