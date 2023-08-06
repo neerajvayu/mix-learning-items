@@ -1,0 +1,3 @@
+"BACKUP DATABASE dummy-db TO DISK ='C:\backup.bak'" > bak.sql
+
+osql -U sa -P dummy-pass -S testdbserver\testdbinstance -i bak.sql
