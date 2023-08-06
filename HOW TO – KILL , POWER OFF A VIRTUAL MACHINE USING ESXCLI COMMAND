@@ -1,0 +1,29 @@
+If you want to power off or kill a virtual machine running on an ESXi host you can do this using the following esxcli command:
+connect a console to your ESXi host (eg. SSH or ESXi Shell)
+To get a list of all VMs running on the host use this command:
+esxcli vm process list
+The list contains: World ID, Process ID, VMX Cartel ID, UUID, display name and the path to the vmx config file:
+kill_vm
+To kill / power off the virtual machine use the following command:
+esxcli vm process kill -type=xxxx – world-id=yyyyy
+for -type=xxxx use: soft, hard or force
+for world-id=yyyy use the World ID listed in the command above (eg. World ID 39731 for the example VM “Cold”)
+Some information about the three possible shutdown methods:
+soft = prefer this if you want to shut down “softly”
+hard = equal to an immediate shutdown
+force = hard kill of the VM
+
+
+How to – kill a running virtual machine process with ESXTOP
+ 
+Sometimes it is necessary to kill a running virtual machine process (eg. if there is locked file).
+Of course you can do this with the kill command: “kill -9 PID” …or you can do it in ESXTOP!
+.) run ESXTOP
+.) press “c” to open the CPU view
+.) press “f” to add/remove fields
+.) press “c” to add the field LWID Leader World Id (World Group ID)
+.) press “k” to open the kill prompt:
+
+.) type in the LWID from the target virtual machine
+.) ENTER
+.) wait 30 seconds and take care that the process is no longer listed
