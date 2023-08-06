@@ -1,0 +1,4 @@
+As a workaround, remount the Linux file system using this command to return it to the proper state:
+
+
+mount -o remount /
