@@ -1,0 +1,49 @@
+Cases
+Most of the no boot cases are caused by either of the following reasons:   
+Disk metadata corruption in the master boot record (MBR), partition table, or boot sector of Windows RE partition.
+Missing or corrupt boot manager.
+Missing or corrupt boot configuration data.
+Startup Repair Process
+Startup Repair will try to repair computers that are unbootable because of the following reasons:
+Registry corruption
+Missing or damaged system and driver files
+Disk metadata corruption (MBR, partition table, and boot sector)
+File system metadata corruption
+Installation of problematic or incompatible drivers
+Installation of incompatible Windows service packs and patches
+Corrupt boot configuration data
+Bad memory and hard disk hardware (detection only)
+
+How Windows RE Works
+ Log file location: Startup Repair Log:
+After Startup Repair has run, a text log with diagnostic information and repair result is generated within the recovery console. This log file is located at %WINDIR%\System32\LogFiles\Srt\SrtTrail.txt
+
+
+ We can execute startrep.exe tool in recovery console to address corrupt registry issues if any in Windows Server 2008 R2
+ If the Windows registry is slightly or moderately corrupted, you may be able to restart the computer in Safe mode and use System Restore to restore the registry of the computer to the last known good configuration. However, if the Windows registry is severely corrupted, all types of logon will be prevented. Attempting to log on to Windows causes the system to fail and then to restart. In this situation, you will need to boot the system into the Recovery Console instead of into Windows. Once in the Recovery Console, you can use the Startup Repair tool. Startup Repair automates common diagnostic and repair tasks of unbootable Windows installations.
+a)       Boot from your Windows Vista or Windows Server 2008 DVD
+b)       On the first screen of Setup choose Next
+c)       In the lower left of the screen choose "repair your computer"
+d)       On the System Recovery Options screen choose your installation of Windows and then click next
+e)       Click "Command prompt"
+f)        Go to X:\sources\recovery> startrep.exe
+g)       This will take a while but will address any registry related issues.
+ 
+Event ID 4005 — Windows Logon Availability
+
+
+
+Sfc Scannow command address file based corruptions if any.
+a)       Boot from your Windows Vista or Windows Server 2008 DVD
+b)       On the first screen of Setup choose Next
+c)       In the lower left of the screen choose "repair your computer"
+d)       On the System Recovery Options screen choose your installation of Windows and then click next
+e)       Click "Command prompt"
+f)        Type in the following command: SFC.EXE /scannow /offbootdir=c:\ /offwindir=c:\windows
+g)       When complete type in exit to see if Windows starts up now.
+
+Chkdsk to address disk and filesystem based issues.
+Boot the machine in recovery console mode and run chkdsk on C: drive [Local Fixed Disk]
+chkdsk C: /f and then chkdsk c: /r 
+/f - Fixes errors on the disk. The disk must be locked. If chkdsk cannot lock the drive, a message appears that asks you if you want to check the drive the next time you restart the computer.
+/r - Locates bad sectors and recovers readable information. The disk must be locked. /r includes the functionality of /f, with the additional analysis of physical disk errors.
