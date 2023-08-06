@@ -1,0 +1,75 @@
+
+To install VMware Tools, you must mount the VMware Tools CD image, extract the contents (VMware Tools), and then run the installer.
+
+Note: If VMware Tools is already installed, use these steps to uninstall and then reinstall VMware Tools. When there is product updates, the VMware Tools package is also updated, so an update of the installed version of VMware Tools is required.
+
+Ubuntu or Ubuntu Server with a graphical user interface
+To mount the CD image and extract the contents:
+Power on the virtual machine.
+Log in to the virtual machine using an account with administrator or root privileges.
+Select:
+For Fusion: Virtual Machine > Install VMware Tools.
+For Workstation: VM > Install VMware Tools.
+For Player: Player > Manage > Install VMware Tools.
+
+Note: If you are running the light version of Fusion, a version of Workstation without VMware Tools, or VMware Player, you are prompted to download VMware Tools before they can be installed. Click Download Now to begin the download.
+
+Open the VMware Tools CD mounted on the Ubuntu desktop.
+Right-click the file name that is similar to VMwareTools.x.x.x-xxxx.tar.gz, click Extract to, and select Ubuntu Desktop to save the extracted contents.
+
+The vmware-tools-distrib folder is extracted to the Ubuntu Desktop.
+To install VMware Tools in Ubuntu:
+Open a Terminal window. For more information, see Opening a command or shell prompt (1003892).
+In the Terminal, run this command to navigate to the vmware-tools-distrib folder:
+
+cd Desktop/vmware-tools-distrib
+
+Run this command to install VMware Tools:
+
+sudo ./vmware-install.pl -d
+
+Note: The -d switch assumes that you want to accept the defaults. If you do not use -d, press Return to accept the defaults or supply your own answers.
+
+Enter your Ubuntu password.
+Restart the Ubuntu virtual machine after the VMware Tools installation completes.
+Ubuntu Server with only a command line interface
+Go to Virtual Machine > Install VMware Tools (or VM > Install VMware Tools).
+
+Note: If you are running the light version of Fusion, or a version of Workstation without VMware Tools, or VMware Player, you are prompted to download the Tools before they can be installed. Click Download Now to begin the download.
+
+In the Ubuntu guest, run these commands:
+
+Run this command to create a directory to mount the CD-ROM:
+
+sudo mkdir /mnt/cdrom
+
+When prompted for a password, enter your Ubuntu admin user password.
+
+Note: For security reasons, the typed password is not displayed. You do not need to enter your password again for the next five minutes.
+
+Run this command to mount the CD-ROM:
+
+sudo mount /dev/cdrom /mnt/cdrom or sudo mount /dev/sr0 /mnt/cdrom
+
+The file name of the VMware Tools bundle varies depending on your version of the VMware product. Run this command to find the exact name:
+
+ls /mnt/cdrom
+
+Run this command to extract the contents of the VMware Tools bundle:
+
+tar xzvf /mnt/cdrom/VMwareTools-x.x.x-xxxx.tar.gz -C /tmp/
+
+Note: x.x.x-xxxx is the version discovered in the previous step.
+
+Run this command to change directories into the VMware Tools distribution:
+
+cd /tmp/vmware-tools-distrib/
+
+Run this command to install VMware Tools:
+
+sudo ./vmware-install.pl -d
+
+Note: The -d switch assumes that you want to accept the defaults. If you do not use -d, press Return to accept each default or supply your own answers.
+Run this command to reboot the virtual machine after the installation completes:
+
+sudo reboot
