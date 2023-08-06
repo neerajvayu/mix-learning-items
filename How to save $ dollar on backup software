@@ -1,0 +1,110 @@
+There are mainly two types of backup technique widely used to backup virtual machine in vmware.
+1) Backup Lun
+2) Snapshot based
+
+Both the techniques are good but have some pros & cons.
+1) Backup Lun - We take incremental backup of whole Lun, means we are taking backup of all the vms which reside there in the Lun.
+
+This method is safe with less backup failure rate but it is difficult to manage and need good understanding of storage so company need at least L2 folks to maintain this.
+
+Second in case you need backup of only one VM this method is not right for you because it take backup of whole Lun means backup of all the vms inside it which are not required and this way there would be waste of storage space.
+
+It will analyze the daily change in the Lun and replicate the same to another place, sounds good but incremental data of a multiple VMs would be large enough to cause latency and other VMs would suffer since its Lun to Lun change copy.
+
+Most of the time this feature is provided by the storage vendor and storage to storage replication is very fast/consistent plus we don't need to pay extra $ dollar to any backup vendor.
+
+2) Snapshot based - In this technique we select a vm or list of vms which reside in different Luns and different virtual clusters.
+
+This way we don't need to take backup of all the vms inside a Lun, we can choose vms of our choice according to our requirement.
+
+Snapshot based technique is very easy to use for backup/restore and they are smooth enough that anyone can handle it with 1-2 days of training.
+
+It require third party tool which analyze the incremental changes of the vm and take the backup after applying compression and DE-duplication, there are few tools available in the market to do this but they are not free and most of them offer CPU based license.
+
+Problem with CPU based license is suppose your blade server is having 4 physical socket and you have to take backup of 10 machine out of 60 running there then it would be not a good idea to spend lots of money on licensing.
+
+In production its not good idea to fully utilize the resource so not advisable to put all the vms in the same host which is licensed to take backup.
+
+So with CPU license backup vendors are basically forcing you to buy more and more licenses.
+
+
+Now is there any idea to reduce the cost and still use cpu based license with snapshot backup?
+
+::::: Yes there are ideas and this article if few of them, its again an idea not step by step solution.
+::::: I have used this idea many times but there lots of manual steps were taken which we can automate easily.
+::::: Few folkes with good understanding of vmware with powershell can do it within a week as per my understanding and automate all the thing
+
+How to do it ??
+
+Idea is we would take some machine with 40-50% load and use them for backup because anyway when agent/appliance based backup tool is used we need to ensure there is enough resource available for them to take the backup and anyway we take backup in off-hour so we can easily get it.
+
+a) Identify the vms which we need to take the backup
+b) Create small list may be .csv file and put 10-15 vms there
+c) Identify the time
+d) Do a vMotion of those vms among backup licensed host and note existing hostname in temp variable
+e) Start the backup and according to prior calculation put a check that backup is done or not, you can check by using your outlook emails or to check whether vm has still snapshot attached to it through vmware powercli command.
+f) When it is confirmed than backup is completed and no snapshot is there , just move it to old host, do the same for all other vms as well and free the resource at backup host so that you can put another list of vms for backup.
+
+Below is the script we can use to move the vm on specific time, although for a large environment it require more coding but once you setup things properly you will save cost.
+
+
+
+###############################################################################
+clear
+Add-PSSnapin VMware.VimAutomation.Core
+$Admin ="tech-jockey\jockey-admin"
+$Password = Get-Content c:\vccred\securestring.txt | convertto-securestring
+$Credential = new-object -typename System.Management.Automation.PSCredential -argumentlist $Admin, $Password
+Connect-VIServer tech-jockey-vCenter -SaveCredentials -Credential $Credential
+$a = Get-Date
+echo $a.Hour
+
+if($a.Hour -ge 15)
+{
+
+    $vms=get-folder -name vm-tobe-backup |Get-VM
+    foreach($item in $vms)
+    {
+Get-VM -Name $item.name | Move-VM –Destination (Get-VMHost jockeyhost1)
+
+    }
+}
+###############################################################################
+
+
+More Explanation of Steps:-
+
+a)
+VMs identification should be based on your requirement and design of environment.
+You have to segregate the vms and put them on vCenter folders and get the list with below command
+
+$vms=get-folder -name folder_name|get-vm
+
+above command will find the specified folder and provide an output for pipe to get-vm command.
+get-vm command will find the list and details of all the vms in the folder and store it to a variable $vms
+
+b)
+You have to create some .csv files manually and put vm names there so that you can pass it to the script its basic idea.
+Second use vCenter folder and schedule backup time for complete folder ,
+this way you can create .csv file on run time and extarct vmHost and vmName value in the csv so that
+after completion of the backup you will again use it to move vm back to old host and then delete temp csv file.
+
+c)
+It is the most critical part where you have to do lots of analysis on backup time like which vm is taking how much time to complete the backup and writing how much data.
+A particular folder backups are completing in how much time, record the trend and make schedule accordingly
+
+d)
+You have already created the csv file with vm name and old host name so now the time is to do vmotion on backup host
+
+e)
+Start the backup and according to your calculation put a check after some intervals to see if backup has been complated of not, like you can monitor email alert sent by backup software and there are many other method to check it.
+
+f)
+Once you or script is sure that backup is complete next task is to read the temp csv file and move these VMs back to the old host
+put a check after 10 minutes and check whether they are on the old host or not
+Repeat the same for other vms and enjoy the saving.
+
+
+Please like and share the page ,Your comments are welcome !
+Thanks,
+Neeraj Jha , Team: http://tech-jockey.blogspot.com/
