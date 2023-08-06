@@ -56,7 +56,7 @@ How VDA works – VDA used application like ms-office firefox on the 2008 server
 Communication:-
 
 
-https://github.com/neerajvayu/images/blob/main/citrix%20central%20execution.png
+<img src="https://github.com/neerajvayu/images/blob/main/citrix%20central%20execution.png">
 
 1.       User connects to the store front and clicks on any application or user ask for vdi through receiver.
 2.       Store font talk to the controller which is inbuilt in the studio, store front or receiver send an authentication req to the controller
