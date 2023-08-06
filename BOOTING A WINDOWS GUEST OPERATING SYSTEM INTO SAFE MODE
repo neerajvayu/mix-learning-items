@@ -1,0 +1,17 @@
+To start any version of a Windows operating system in Safe Mode:
+Caution: Depending on your problem, performing this procedure may remove a software environment that is required to test the health of your operating system.
+Restart the operating system or power off and power on the computer.
+When the computer starts, press and hold F8.
+
+Notes:
+Depending how your keyboard is configured, you may need to press fn+F8 rather than just F8.
+You may see a series of messages that display information about hardware and memory. This is called POST information. If you see POST information, you do not need to press F8 until the screen goes black. Ensure the mouse focus is inside the virtual machine by clicking inside the console window and that you press F8 in a timely fashion. Windows can start very rapidly, and it may take several attempts to catch the Safe Mode screen. To delay the POST information screen, see Accessing the BIOS when the POST screen clears too quickly (1004129).
+You are presented with a text menu of start options.
+
+Note: If you do not see this text menu and Windows boots normally, repeat steps 1-2.
+
+Select a safe mode and press enter.
+
+If the operating system issues involve networking, select Safe Mode with Networking.
+If the operating system issues do not involve networking, select Safe Mode.
+If the symptoms are resolved when using Safe Mode, then the source of the symptoms are related to a third-party application or nonessential Windows service, not Windows itself. You can try selectively disabling individual services and startup applications to narrow the cause of the problem
