@@ -1,0 +1,11 @@
+Every disk in your storage system has a maximum theoretical IOPS value that is based on a formula. Disk performance — and IOPS — is based on three key factors:
+Spindle speed. Measured in revolutions per minute (RPM), most disks you'll consider for enterprise storage rotate at speeds of 7,200, 10,000 or 15,000 RPM with the latter two being the most common. A higher rotational speed is associated with a higher performing disk. This value is not used directly in calculations, but it is highly important. The other three values depend heavily on the rotational speed, so I've included it for completeness.
+Average latency. The time it takes for the sector of the disk being accessed to rotate into position under a read/write head.
+Average seek time. The time (in ms) it takes for the hard drive's read/write head to position itself over the track being read or written. There are both read and write seek times; take the average of the two values.
+To calculate the IOPS range, use this formula: Average IOPS: Divide 1 by the sum of the average latency in ms and the average seek time in ms (1 / (average latency in ms + average seek time in ms).
+Sample drive:
+Model: Western Digital VelociRaptor 2.5" SATA hard drive
+Rotational speed: 10,000 RPM
+Average latency: 3 ms (0.003 seconds)
+Average seek time: 4.2 (r)/4.7 (w) = 4.45 ms (0.0045 seconds)
+Calculated IOPS for this disk: 1/(0.003 + 0.0045) = about 133 IOPS
