@@ -1,0 +1,15 @@
+Symptoms
+Attempting to connect to a virtual machine console fails.
+The VMRC session opens with the vSphere Web Client, but not with the vSphere Client.
+You see the error :
+
+Error: The VMRC Console has Disconnected.. Attempting to reconnect
+Cause
+This issue occurs due to an Application Control software such as antivirus software that blocks certain applications or functions of installed software on client/server systems.
+
+Note: Access to Web GUI of the security server or hosted portal is important to disable certain settings depending on antivirus architecture.
+Resolution
+To resolve this issue, use one of these options:
+Disable application control for virtual applications through the antivirus software.
+Uninstall and reinstall the vSphere Client.
+Stop the vmware-vmrc.exe*32 service from Windows Task Manager and log in again.
