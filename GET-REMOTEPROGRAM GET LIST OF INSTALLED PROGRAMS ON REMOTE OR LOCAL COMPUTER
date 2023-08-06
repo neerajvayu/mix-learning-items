@@ -1,0 +1,23 @@
+.EXAMPLE 
+Get-RemoteProgram 
+ 
+Description: 
+Will generate a list of installed programs on local machine 
+ 
+.EXAMPLE 
+Get-RemoteProgram -ComputerName server01,server02 
+ 
+Description: 
+Will generate a list of installed programs on server01 and server02 
+ 
+.EXAMPLE 
+Get-RemoteProgram -ComputerName Server01 -Property DisplayVersion,VersionMajor 
+ 
+Description: 
+Will gather the list of programs from Server01 and attempts to retrieve the displayversion and versionmajor subkeys from the registry for each installed program 
+ 
+.EXAMPLE 
+'server01','server02' | Get-RemoteProgram -Property Uninstallstring 
+ 
+Description 
+Will retrieve the installed programs on server01/02 that are passed on to the function through the pipeline and also retrieves the uninstall string for each program 
